@@ -3,131 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mô Phỏng Tài Xỉu</title>
+    <title>Mô Phỏng Tài Xỉu - Soi Cầu Chuyên Nghiệp</title>
     <style>
         body {
-            background-color: #1a0b2e;
+            background-color: #120524;
             color: #fff;
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
         }
         .container {
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
-            background: #2d124f;
+            background: #230d3d;
             border: 2px solid #b8860b;
             border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.7);
+            padding: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         h2 {
             color: #ffd700;
-            margin-bottom: 10px;
+            margin: 5px 0 15px 0;
+            font-size: 22px;
         }
-        .stats {
+        .top-info {
             display: flex;
-            justify-content: space-around;
-            margin-bottom: 15px;
+            justify-content: space-between;
+            background: #150629;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
             font-size: 16px;
-            font-weight: bold;
+            border: 1px solid #4a1c7d;
         }
+        .wallet { color: #00ffcc; font-weight: bold; }
+        .timer { color: #ff9900; font-weight: bold; }
+
         .dice-box {
             display: flex;
             justify-content: center;
             gap: 15px;
-            margin: 20px 0;
+            margin: 15px 0;
         }
         .dice {
-            width: 50px;
-            height: 50px;
+            width: 55px;
+            height: 55px;
             background: #fff;
             color: #000;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
         }
-        .result-text {
-            font-size: 20px;
+        .result-announcement {
+            font-size: 18px;
             font-weight: bold;
             margin: 10px 0;
+            min-height: 25px;
         }
         .tai { color: #ff4d4d; }
         .xiu { color: #4da6ff; }
-        
+
+        /* Khu vực đặt cược */
+        .bet-control {
+            background: #1a0830;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border: 1px solid #4a1c7d;
+        }
+        .bet-input-group {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .bet-input-group input {
+            padding: 8px 12px;
+            font-size: 16px;
+            width: 140px;
+            border-radius: 5px;
+            border: 1px solid #b8860b;
+            background: #0d021a;
+            color: #fff;
+            text-align: right;
+        }
+        .quick-chips {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .chip {
+            padding: 5px 12px;
+            background: #4a1c7d;
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        .chip:hover { background: #6b28b5; }
+
         .bet-buttons {
-            margin: 20px 0;
             display: flex;
             justify-content: center;
             gap: 20px;
         }
         button.btn-bet {
-            padding: 12px 30px;
-            font-size: 18px;
+            padding: 12px 35px;
+            font-size: 16px;
             font-weight: bold;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             color: #fff;
+            transition: 0.2s;
         }
-        .btn-tai { background-color: #cc0000; }
-        .btn-xiu { background-color: #0066cc; }
-        .btn-bet:hover { opacity: 0.8; }
+        .btn-tai { background-color: #cc0000; border: 2px solid #ff4d4d; }
+        .btn-xiu { background-color: #0055aa; border: 2px solid #4da6ff; }
+        .btn-bet:hover { opacity: 0.85; transform: scale(1.03); }
+        .btn-bet:disabled { background: #555; border-color: #777; cursor: not-allowed; transform: none; }
 
-        /* Bảng lịch sử chấm tròn */
+        /* Bảng soi cầu dạng lưới ma trận (Mô phỏng ảnh lịch sử phiên) */
         .history-board {
-            margin-top: 20px;
-            background: #1a0b2e;
+            margin-top: 15px;
+            background: #140524;
             padding: 10px;
             border-radius: 8px;
-            text-align: left;
+            border: 1px solid #4a1c7d;
+            overflow-x: auto;
         }
         .history-title {
             font-size: 14px;
             margin-bottom: 8px;
             color: #ffd700;
+            text-align: left;
+            font-weight: bold;
         }
-        .history-dots {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
+        .grid-container {
+            display: grid;
+            grid-template-rows: repeat(6, 26px);
+            grid-auto-flow: column;
+            gap: 4px;
+            justify-content: start;
+            min-width: max-content;
             padding-bottom: 5px;
         }
         .dot {
-            width: 28px;
-            height: 28px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            flex-shrink: 0;
         }
-        .dot-tai { background: #ff4d4d; color: white; }
-        .dot-xiu { background: #4da6ff; color: white; }
-        
-        .wallet {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #00ffcc;
+        .dot-tai { background: #ff4d4d; color: white; box-shadow: 0 0 4px #ff4d4d; }
+        .dot-xiu { background: #4da6ff; color: white; box-shadow: 0 0 4px #4da6ff; }
+        .dot-empty { background: rgba(255, 255, 255, 0.05); }
+
+        .my-bet-status {
+            font-size: 14px;
+            color: #ffeb3b;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>LỊCH SỬ PHIÊN & TÀI XỈU</h2>
-    <div class="wallet">Số dư: <span id="balance">10,000</span> VNĐ</div>
+    <h2>TÀI XỈU - SOI CẦU CHUYÊN NGHIỆP</h2>
     
-    <div class="stats">
-        <span>Tài: <span id="count-tai">0</span></span>
-        <span>Xỉu: <span id="count-xiu">0</span></span>
+    <div class="top-info">
+        <div>Số dư: <span id="balance" class="wallet">200,000</span> VNĐ</div>
+        <div>Thời gian: <span id="timer" class="timer">10s</span></div>
     </div>
 
     <div class="dice-box">
@@ -136,89 +194,221 @@
         <div class="dice" id="d3">?</div>
     </div>
 
-    <div class="result-text" id="result-announcement">Hãy chọn Tài hoặc Xỉu để bắt đầu!</div>
+    <div class="result-announcement" id="announcement">Đang chờ phiên mới... Vui lòng đặt cược!</div>
+    <div class="my-bet-status" id="myBetStatus">Bạn chưa đặt cược phiên này.</div>
 
-    <div class="bet-buttons">
-        <button class="btn-bet btn-tai" onclick="play('TAI')">ĐẶT TÀI</button>
-        <button class="btn-bet btn-xiu" onclick="play('XIU')">ĐẶT XỈU</button>
+    <!-- Khu vực nhập tiền và cược -->
+    <div class="bet-control">
+        <div class="bet-input-group">
+            <label for="betAmount">Tiền cược:</label>
+            <input type="number" id="betAmount" value="10000" step="1000" min="1000">
+        </div>
+        <div class="quick-chips">
+            <div class="chip" onclick="addChip(10000)">+10K</div>
+            <div class="chip" onclick="addChip(50000)">+50K</div>
+            <div class="chip" onclick="addChip(100000)">+100K</div>
+            <div class="chip" onclick="addChip(500000)">+500K</div>
+            <div class="chip" onclick="setAllIn()">Tất tay</div>
+        </div>
+        <div class="bet-buttons">
+            <button class="btn-bet btn-tai" id="btnTai" onclick="placeBet('TAI')">ĐẶT TÀI</button>
+            <button class="btn-bet btn-xiu" id="btnXiu" onclick="placeBet('XIU')">ĐẶT XỈU</button>
+        </div>
     </div>
 
-    <!-- Bảng lịch sử dạng chấm tròn mô phỏng -->
+    <!-- Bảng soi cầu dạng lưới chấm tròn -->
     <div class="history-board">
-        <div class="history-title">Lịch sử kết quả gần nhất:</div>
-        <div class="history-dots" id="historyDots">
-            <!-- Các chấm kết quả sẽ hiện ở đây -->
+        <div class="history-title">Bảng Lịch Sử Soi Cầu (Cầu Bệt, 1-1, 2-2...):</div>
+        <div class="grid-container" id="historyGrid">
+            <!-- Các ô chấm cầu xuất hiện ở đây -->
         </div>
     </div>
 </div>
 
 <script>
-    let balance = 10000;
-    let countTai = 0;
-    let countXiu = 0;
-    let historyList = [];
+    let balance = 200000;
+    let currentBetChoice = null;
+    let currentBetAmount = 0;
+    let gameState = 'BETTING'; // 'BETTING' hoặc 'ROLLING'
+    let timeLeft = 10;
+    let historyList = []; // Lưu danh sách kết quả [{type: 'TAI'/'XIU', score: 14}, ...]
 
-    function play(userChoice) {
-        let betAmount = 1000;
-        if (balance < betAmount) {
-            alert("Bạn đã hết tiền!");
+    const maxRows = 6;
+    const maxCols = 25;
+
+    function addChip(amount) {
+        let input = document.getElementById('betAmount');
+        let current = parseInt(input.value) || 0;
+        input.value = current + amount;
+    }
+
+    function setAllIn() {
+        document.getElementById('balance').innerText = balance.toLocaleString();
+        document.getElementById('betAmount').value = balance;
+    }
+
+    function placeBet(choice) {
+        if (gameState !== 'BETTING') {
+            alert("Đã hết thời gian đặt cược cho phiên này!");
+            return;
+        }
+        let amountInput = parseInt(document.getElementById('betAmount').value);
+        if (isNaN(amountInput) || amountInput <= 0) {
+            alert("Vui lòng nhập số tiền cược hợp lệ!");
+            return;
+        }
+        if (amountInput > balance) {
+            alert("Số dư của bạn không đủ để cược số tiền này!");
             return;
         }
 
-        balance -= betAmount;
+        currentBetChoice = choice;
+        currentBetAmount = amountInput;
+        balance -= currentBetAmount;
 
-        // Tung 3 con xúc sắc ngẫu nhiên từ 1 đến 6
-        let d1 = Math.floor(Math.random() * 6) + 1;
-        let d2 = Math.floor(Math.random() * 6) + 1;
-        let d3 = Math.floor(Math.random() * 6) + 1;
-        let total = d1 + d2 + d3;
-
-        let outcome = (total >= 11) ? 'TAI' : 'XIU';
-
-        // Hiển thị mặt xí ngầu
-        document.getElementById('d1').innerText = d1;
-        document.getElementById('d2').innerText = d2;
-        document.getElementById('d3').innerText = d3;
-
-        let announcement = document.getElementById('result-announcement');
-        if (outcome === 'TAI') {
-            announcement.innerHTML = `Tổng: <span class="tai">${total} điểm (TÀI)</span>`;
-            countTai++;
-        } else {
-            announcement.innerHTML = `Tổng: <span class="xiu">${total} điểm (XỈU)</span>`;
-            countXiu++;
-        }
-
-        // Kiểm tra thắng thua
-        if (userChoice === outcome) {
-            balance += betAmount * 2;
-            announcement.innerHTML += " - <span style='color: #00ffcc;'>BẠN THẮNG!</span>";
-        } else {
-            announcement.innerHTML += " - <span style='color: #ff4d4d;'>BẠN THUA!</span>";
-        }
-
-        // Cập nhật giao diện
         document.getElementById('balance').innerText = balance.toLocaleString();
-        document.getElementById('count-tai').innerText = countTai;
-        document.getElementById('count-xiu').innerText = countXiu;
-
-        // Lưu lịch sử và giới hạn hiển thị 15 kết quả gần nhất
-        historyList.push({ type: outcome, score: total });
-        if (historyList.length > 15) historyList.shift();
-
-        renderHistory();
+        document.getElementById('myBetStatus').innerHTML = `Bạn đã cược <b style="color:#ffd700">${currentBetAmount.toLocaleString()} VNĐ</b> vào cửa <b class="${choice === 'TAI' ? 'tai' : 'xiu'}">${choice}</b>`;
+        
+        // Khóa tạm nút cược hoặc đổi trạng thái nếu muốn
     }
 
-    function renderHistory() {
-        let container = document.getElementById('historyDots');
-        container.innerHTML = '';
-        historyList.forEach(item => {
-            let dot = document.createElement('div');
-            dot.className = `dot ${item.type === 'TAI' ? 'dot-tai' : 'dot-xiu'}`;
-            dot.innerText = item.score;
-            container.appendChild(dot);
-        });
+    // Vòng lặp thời gian game
+    let timerInterval = setInterval(() => {
+        if (gameState === 'BETTING') {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft + 's';
+            if (timeLeft <= 0) {
+                // Chuyển sang giai đoạn mở bát
+                gameState = 'ROLLING';
+                document.getElementById('timer').innerText = 'Mở bát...';
+                resolveRound();
+            }
+        }
+    }, 1000);
+
+    function resolveRound() {
+        // Khóa nút
+        document.getElementById('btnTai').disabled = true;
+        document.getElementById('btnXiu').disabled = true;
+        document.getElementById('announcement').innerText = "Đang lắc xúc sắc...";
+
+        setTimeout(() => {
+            // Tung 3 hột xí ngầu ngẫu nhiên
+            let d1 = Math.floor(Math.random() * 6) + 1;
+            let d2 = Math.floor(Math.random() * 6) + 1;
+            let d3 = Math.floor(Math.random() * 6) + 1;
+            let total = d1 + d2 + d3;
+            let outcome = (total >= 11) ? 'TAI' : 'XIU';
+
+            // Hiển thị xí ngầu
+            document.getElementById('d1').innerText = d1;
+            document.getElementById('d2').innerText = d2;
+            document.getElementById('d3').innerText = d3;
+
+            let annText = `Tổng: <span class="${outcome === 'TAI' ? 'tai' : 'xiu'}">${total} điểm (${outcome})</span>`;
+
+            // Tính thắng thua
+            if (currentBetChoice) {
+                if (currentBetChoice === outcome) {
+                    let winAmount = currentBetAmount * 2;
+                    balance += winAmount;
+                    annText += ` - <span style="color: #00ffcc;">THẮNG +${winAmount.toLocaleString()} VNĐ</span>`;
+                } else {
+                    annText += ` - <span style="color: #ff4d4d;">THUA -${currentBetAmount.toLocaleString()} VNĐ</span>`;
+                }
+            } else {
+                annText += ` - (Bạn không cược phiên này)`;
+            }
+
+            document.getElementById('announcement').innerHTML = annText;
+            document.getElementById('balance').innerText = balance.toLocaleString();
+
+            // Lưu lịch sử
+            historyList.push({ type: outcome, score: total });
+            renderMatrixGrid();
+
+            // Reset cho phiên sau sau 4 giây
+            setTimeout(() => {
+                resetForNextRound();
+            }, 4000);
+
+        }, 1500);
     }
+
+    function resetForNextRound() {
+        gameState = 'BETTING';
+        timeLeft = 10;
+        document.getElementById('timer').innerText = timeLeft + 's';
+        currentBetChoice = null;
+        currentBetAmount = 0;
+        document.getElementById('myBetStatus').innerText = "Bạn chưa đặt cược phiên này.";
+        document.getElementById('announcement').innerText = "Hãy đặt cược cho phiên mới!";
+        document.getElementById('d1').innerText = '?';
+        document.getElementById('d2').innerText = '?';
+        document.getElementById('d3').innerText = '?';
+        document.getElementById('btnTai').disabled = false;
+        document.getElementById('btnXiu').disabled = false;
+    }
+
+    // Thuật toán dựng bảng ma trận soi cầu (Dạng cột dọc cho cầu bệt/đảo chiều giống thực tế)
+    function renderMatrixGrid() {
+        let gridContainer = document.getElementById('historyGrid');
+        gridContainer.innerHTML = '';
+
+        // Xây dựng ma trận 6 hàng x N cột từ lịch sử
+        // Quy luật cơ bản của bảng bead plate/lưới sòng bạc: kết quả đi từ trên xuống dưới, hết cột thì dịch phải.
+        let matrix = Array(maxRows).fill(null).map(() => Array(maxCols).fill(null));
+        
+        let r = 0;
+        let c = 0;
+        let lastType = null;
+
+        // Đắp dữ liệu vào ma trận đơn giản theo chuỗi thời gian
+        for (let i = 0; i < historyList.length; i++) {
+            let item = historyList[i];
+            
+            // Nếu đổi loại kết quả (ví dụ từ Tài sang Xỉu) và chưa phải phần tử đầu tiên -> chuyển sang cột mới
+            if (i > 0 && item.type !== historyList[i - 1].type) {
+                c++;
+                r = 0;
+            } else if (r >= maxRows) {
+                // Nếu cột đầy thì dịch sang phải
+                c++;
+                r = 0;
+            }
+
+            if (c >= maxCols) {
+                // Nếu vượt quá khung nhìn, cắt bớt hiển thị các cột cũ ở bên trái
+                historyList.shift();
+                i--;
+                renderMatrixGrid();
+                return;
+            }
+
+            matrix[r][c] = item;
+            r++;
+        }
+
+        // Vẽ ma trận ra HTML
+        for (let row = 0; row < maxRows; row++) {
+            for (let col = 0; col < maxCols; col++) {
+                let cellData = matrix[row][col];
+                let cellDiv = document.createElement('div');
+                
+                if (cellData) {
+                    cellDiv.className = `dot ${cellData.type === 'TAI' ? 'dot-tai' : 'dot-xiu'}`;
+                    cellDiv.innerText = cellData.score;
+                    cellDiv.title = `${cellData.type} (${cellData.score} điểm)`;
+                } else {
+                    cellDiv.className = 'dot dot-empty';
+                }
+                gridContainer.appendChild(cellDiv);
+            }
+        }
+    }
+
+    // Khởi tạo bảng rỗng lúc đầu
+    renderMatrixGrid();
 </script>
 
 </body>
