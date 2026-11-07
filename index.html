@@ -4,1214 +4,365 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tài Xỉu Sunwin Simulator</title>
-    <!-- FontAwesome icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            font-family: 'Montserrat', sans-serif;
-        }
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
         html, body {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden !important;
-            touch-action: none !important;
-            margin: 0;
-            padding: 0;
-            position: fixed;
+            width: 100vw; height: 100vh; overflow: hidden; background: #000;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; justify-content: center; align-items: center;
         }
-        body {
-            background-color: #05020a;
-            background-image: 
-                radial-gradient(circle at 50% 30%, #2b0e3f 0%, #0d0417 70%, #030107 100%);
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            align-items: center;
+        
+        #game-scaler {
+            width: 1280px; height: 720px; position: absolute;
+            background: radial-gradient(circle at center, #2e0815 0%, #0d0107 100%);
+            display: flex; flex-direction: column; justify-content: space-between;
+            align-items: center; padding: 15px; border-radius: 12px;
+            transform-origin: center center; overflow: hidden;
         }
 
-        /* Landscape enforce orientation prompt for portrait mobile */
-        @media screen and (orientation: portrait) and (max-width: 768px) {
-            #rotatePrompt {
-                display: flex !important;
-            }
+        .header-bar {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            background: linear-gradient(180deg, rgba(60,20,30,0.8) 0%, rgba(20,5,10,0.8) 100%);
+            padding: 8px 20px; border-radius: 30px; border: 1px solid #7a2b38;
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #ffd700; font-size: 18px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #ffd700; background: #555; }
+        .wallet { background: #000; padding: 5px 15px; border-radius: 15px; border: 1px solid #00ffcc; color: #00ffcc; }
+
+        .main-stage { position: relative; width: 100%; flex: 1; display: flex; justify-content: center; align-items: center; }
+        
+        .sunwin-board {
+            width: 820px; height: 420px;
+            background: linear-gradient(180deg, #4a1d24 0%, #20080d 100%);
+            border: 4px solid #d4af37; border-radius: 80px;
+            box-shadow: 0 0 35px rgba(212, 175, 55, 0.4), inset 0 0 25px #000;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 40px; position: relative;
         }
 
-        /* Gold Gradient Borders & Metals */
-        .gold-border {
-            border: 2px solid #e2b755;
-            border-image: linear-gradient(to bottom, #ffe899, #c79633, #7a5410, #e2b755) 1;
+        .board-header {
+            position: absolute; top: -25px; left: 50%; transform: translateX(-50%);
+            background: #d4af37; color: #000; padding: 4px 30px; border-radius: 20px;
+            font-weight: 900; font-size: 20px; border: 2px solid #fff; box-shadow: 0 4px 10px #000;
         }
 
-        .gold-text-gradient {
-            background: linear-gradient(180deg, #fff2ad 0%, #ffd700 45%, #b58013 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.8));
+        .side-btn {
+            width: 240px; height: 260px; background: rgba(0,0,0,0.4);
+            border: 3px solid #664422; border-radius: 30px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            cursor: pointer; transition: 0.2s; position: relative;
         }
+        .side-btn.selected { border-color: #ffd700; background: rgba(212, 175, 55, 0.2); transform: scale(1.02); }
+        .side-btn.winner { animation: flash 0.5s infinite alternate; }
+        @keyframes flash { from { border-color: #00ffcc; box-shadow: 0 0 10px #00ffcc; } to { border-color: #ffd700; box-shadow: 0 0 30px #ffd700; } }
 
-        /* Sunwin Frame Styling */
-        .sunwin-frame {
-            background: linear-gradient(180deg, #573318 0%, #301808 35%, #180a03 70%, #331c0a 100%);
-            border: 3px solid #f6d372;
-            box-shadow: 
-                0 0 0 2px #422006,
-                0 0 35px rgba(230, 160, 40, 0.45),
-                inset 0 0 20px rgba(0,0,0,0.9),
-                inset 0 0 6px #ffe699;
-            border-radius: 42px;
-            position: relative;
-        }
+        .side-title { font-size: 50px; font-weight: 900; }
+        .tai-color { color: #ff3333; text-shadow: 0 0 10px #ff3333; }
+        .xiu-color { color: #3399ff; text-shadow: 0 0 10px #3399ff; }
+        .bet-stat { font-size: 14px; color: #aaa; margin-top: 5px; }
 
-        /* Inner Metallic Board */
-        .inner-board {
-            background: radial-gradient(circle at 50% 50%, #4a2b15 0%, #241106 70%, #120702 100%);
-            border: 2px solid #8f6024;
-            border-radius: 36px;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
+        .center-plate {
+            width: 220px; height: 220px; background: radial-gradient(circle, #664411 0%, #1a1000 100%);
+            border: 6px solid #d4af37; border-radius: 50%; position: relative;
+            display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 20px #000;
         }
-
-        /* Tai / Xiu Betting Boxes */
-        .bet-box {
-            background: linear-gradient(180deg, #3d2311 0%, #1e0e05 100%);
-            border: 2px solid #a87932;
-            border-radius: 24px;
-            box-shadow: inset 0 2px 6px rgba(255,230,150,0.2), inset 0 -4px 10px rgba(0,0,0,0.8);
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .bet-box.active {
-            border-color: #ffe485;
-            box-shadow: 0 0 20px rgba(255,215,0,0.6), inset 0 0 15px rgba(255,215,0,0.3);
-        }
-        .bet-box.winner {
-            animation: winPulse 0.7s infinite alternate;
-        }
-        @keyframes winPulse {
-            0% { border-color: #ffd700; box-shadow: 0 0 10px #ffd700, inset 0 0 10px #ffd700; }
-            100% { border-color: #00ffcc; box-shadow: 0 0 30px #00ffcc, inset 0 0 20px #00ffcc; }
-        }
-
-        /* Red Display Pill for Money */
-        .money-pill {
-            background: linear-gradient(180deg, #610d0d 0%, #2e0404 100%);
-            border: 1.5px solid #d44e4e;
-            box-shadow: inset 0 0 8px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6);
-            border-radius: 12px;
-            font-family: 'Courier New', Courier, monospace;
-        }
-
-        /* Round Metallic Plate & Bowl Area */
-        .plate-container {
-            width: 220px;
-            height: 220px;
-            background: radial-gradient(circle, #8a6027 0%, #3d240a 60%, #1c0d02 100%);
-            border: 5px solid #fce088;
-            box-shadow: 
-                0 0 0 3px #3a1f07,
-                0 10px 25px rgba(0,0,0,0.9),
-                inset 0 0 25px rgba(0,0,0,0.9);
-            border-radius: 50%;
-            position: relative;
-        }
-
-        /* Bowl overlay for 'Nặn' */
-        .bowl {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: radial-gradient(circle at 35% 30%, #ffd677 0%, #b88628 50%, #4a3205 90%, #241600 100%);
-            border: 4px solid #fff0b3;
-            border-radius: 50%;
-            box-shadow: 
-                0 12px 25px rgba(0,0,0,0.9),
-                inset 0 -8px 20px rgba(0,0,0,0.7),
-                inset 0 8px 20px rgba(255,255,255,0.4);
-            cursor: grab;
-            z-index: 30;
-            touch-action: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.05s linear;
-        }
-        .bowl:active {
-            cursor: grabbing;
-        }
-
-        /* Circular Action Buttons Around Frame */
-        .circle-btn {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(180deg, #66431c 0%, #261405 100%);
-            border: 2px solid #e0b15c;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.7), inset 0 1px 3px rgba(255,230,150,0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffe6a3;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-        .circle-btn:hover {
-            transform: scale(1.08);
-            border-color: #fff;
-            color: #fff;
-        }
-        .circle-btn:active {
-            transform: scale(0.92);
-        }
-
-        /* Dice Display */
+        .dices { display: flex; gap: 8px; }
         .dice {
-            width: 44px;
-            height: 44px;
-            background: radial-gradient(circle at 30% 30%, #ff4d4d 0%, #b30000 70%, #660000 100%);
-            border: 2px solid #ff9999;
-            border-radius: 10px;
-            box-shadow: 2px 4px 10px rgba(0,0,0,0.7), inset 0 0 6px rgba(255,255,255,0.5);
-            display: grid;
-            grid-template: repeat(3, 1fr) / repeat(3, 1fr);
-            padding: 5px;
-        }
-        .dot {
-            width: 8px;
-            height: 8px;
-            background-color: #ffffff;
-            border-radius: 50%;
-            justify-self: center;
-            align-self: center;
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.6);
+            width: 45px; height: 45px; background: #e63946; color: #fff;
+            font-size: 26px; font-weight: bold; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            border: 2px solid #ff758c; box-shadow: 2px 2px 6px #000;
         }
 
-        /* History Dots Bar at Bottom */
-        .history-bead {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            border: 1px solid #735118;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 9px;
-            font-weight: 800;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.6);
-        }
-        .bead-tai {
-            background: radial-gradient(circle at 30% 30%, #ff6b6b, #c91212);
-            border-color: #ffa3a3;
-            color: #fff;
-        }
-        .bead-xiu {
-            background: radial-gradient(circle at 30% 30%, #000000, #222222);
-            border-color: #666;
-            color: #fff;
-        }
-        .bead-xiu-white {
-            background: radial-gradient(circle at 30% 30%, #ffffff, #cccccc);
-            border-color: #fff;
-            color: #000;
+        .bowl {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 35% 35%, #ffd700, #886600);
+            border: 4px solid #fff; border-radius: 50%; box-shadow: 0 10px 20px #000;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: bold; color: #fff; font-size: 16px; cursor: grab; z-index: 10;
         }
 
-        /* Modal styling */
-        .modal-bg {
-            background: rgba(4, 1, 10, 0.85);
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: linear-gradient(180deg, #2b170a 0%, #140903 100%);
-            border: 2px solid #d4a74a;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(0,0,0,0.9), 0 0 15px rgba(212,167,74,0.3);
+        .timer-badge {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            font-size: 24px; font-weight: 900; color: #ff9900; background: #000;
+            padding: 2px 20px; border-radius: 12px; border: 1px solid #ff9900;
         }
 
-        /* Matrix Grid for Soi Cau */
-        .matrix-grid {
-            display: grid;
-            grid-template-rows: repeat(6, 26px);
-            grid-auto-flow: column;
-            gap: 4px;
-            overflow-x: auto;
-            padding: 8px;
-            background: #0a0402;
-            border: 1px solid #4a2e12;
-            border-radius: 8px;
+        .control-bar {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(20,5,10,0.9); padding: 10px 20px; border-radius: 15px; border: 1px solid #552233;
         }
-        .matrix-cell {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
+        .chips { display: flex; gap: 10px; }
+        .chip-btn {
+            padding: 8px 18px; background: linear-gradient(180deg, #882233 0%, #441111 100%);
+            border: 1px solid #ffd700; border-radius: 20px; color: #ffd700;
+            font-weight: bold; cursor: pointer; font-size: 14px;
         }
+        .chip-btn:active { transform: scale(0.95); }
 
-        /* Animations */
-        @keyframes shake {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(-4px, 3px) rotate(-3deg); }
-            50% { transform: translate(4px, -3px) rotate(3deg); }
-            75% { transform: translate(-3px, -2px) rotate(-1deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
+        .history-grid {
+            display: grid; grid-template-rows: repeat(6, 18px); grid-auto-flow: column;
+            gap: 3px; background: #000; padding: 6px; border-radius: 8px; border: 1px solid #444;
         }
-        .shaking {
-            animation: shake 0.15s infinite;
-        }
+        .dot { width: 18px; height: 18px; border-radius: 50%; font-size: 9px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
+        .dot-tai { background: #ff3333; color: #fff; }
+        .dot-xiu { background: #3399ff; color: #fff; }
+        .dot-empty { background: rgba(255,255,255,0.05); }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar {
-            height: 6px;
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #140803;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #875c20;
-            border-radius: 3px;
+        #portrait-warning {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000; color: #ffd700; font-size: 20px; font-weight: bold;
+            z-index: 9999; justify-content: center; align-items: center; text-align: center; padding: 20px;
         }
     </style>
 </head>
-<body class="w-full h-full p-1 sm:p-3 overflow-hidden select-none">
+<body>
 
-    <!-- Portrait Device Rotation Warning Screen -->
-    <div id="rotatePrompt" class="fixed inset-0 z-50 bg-black/95 flex-col items-center justify-center p-6 text-center hidden">
-        <i class="fa-solid fa-mobile-screen-button text-yellow-400 text-6xl animate-pulse mb-4 transform rotate-90"></i>
-        <h2 class="text-xl font-bold text-yellow-300 mb-2">VUI LÒNG XOAY NGANG MÀN HÌNH</h2>
-        <p class="text-sm text-gray-300">Xoay thiết bị của bạn sang chế độ xoay ngang (Landscape) để trải nghiệm giao diện game đầy đủ nhất!</p>
+<div id="portrait-warning">Vui lòng xoay ngang màn hình thiết bị để chơi game!</div>
+
+<div id="game-scaler">
+    <div class="header-bar">
+        <div class="user-info">
+            <div class="avatar"></div>
+            <span>NguoiChoi888</span>
+        </div>
+        <div class="wallet">Số dư: <span id="balance">200,000</span> VNĐ</div>
     </div>
 
-    <!-- Top Navigation Header -->
-    <header class="w-full max-w-5xl flex items-center justify-between px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-2xl border border-yellow-700/40 shrink-0">
-            </div>
-        </div>
+    <div class="main-stage">
+        <div class="sunwin-board">
+            <div class="board-header">TÀI XỈU</div>
+            <div class="timer-badge" id="timer">45s</div>
 
-        <!-- Balance display -->
-        <div class="flex items-center gap-2 bg-black/60 px-4 py-1.5 rounded-full border border-yellow-600/60">
-            <i class="fa-solid fa-coins text-yellow-400 text-base"></i>
-            <span id="userBalance" class="text-emerald-400 font-extrabold text-lg tracking-wide">200,000</span>
-            <span class="text-xs text-emerald-500 font-bold">VNĐ</span>
-            <button onclick="depositMoney()" class="ml-2 text-xs bg-yellow-600 hover:bg-yellow-500 text-black px-2 py-0.5 rounded-full font-bold transition">
-                <i class="fa-solid fa-plus"></i>
-            </button>
-        </div>
-
-        <!-- System controls -->
-        <div class="flex items-center gap-3">
-            <button onclick="toggleAudio()" id="soundBtn" class="text-gray-300 hover:text-yellow-400 text-lg transition">
-                <i class="fa-solid fa-volume-high"></i>
-            </button>
-            <button onclick="showGuideModal()" class="text-gray-300 hover:text-yellow-400 text-lg transition">
-                <i class="fa-solid fa-gear"></i>
-            </button>
-        </div>
-    </header>
-
-    <!-- Main Game Container -->
-    <main class="w-full flex-1 flex items-center justify-center relative my-auto py-1 overflow-hidden">
-
-        <!-- Background Casino Lobby Decorations -->
-        <div class="absolute inset-0 pointer-events-none opacity-20 flex justify-between items-center px-4 overflow-hidden">
-            <div class="w-48 h-72 border border-yellow-500/30 rounded-xl bg-purple-900/20 transform -rotate-12 hidden md:block"></div>
-            <div class="w-48 h-72 border border-yellow-500/30 rounded-xl bg-purple-900/20 transform rotate-12 hidden md:block"></div>
-        </div>
-
-        <!-- SUNWIN TÀI XỈU MAIN FRAME -->
-        <div class="sunwin-frame w-full max-w-2xl lg:max-w-3xl p-2 sm:p-4 mx-auto scale-95 sm:scale-100">
-
-            <!-- Logo Title Floating Top -->
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col items-center z-20 pointer-events-none">
-                <div class="relative flex items-center justify-center">
-                    <!-- Red Dice Icon Decor -->
-                    <div class="absolute -left-9 -top-1 w-8 h-8 bg-red-600 rounded-lg border border-yellow-300 rotate-12 flex items-center justify-center shadow-lg">
-                        <div class="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                    <h1 class="text-xl sm:text-2xl font-black italic gold-text-gradient tracking-wider uppercase px-4 py-0.5 bg-black/80 rounded-full border border-yellow-500/50 shadow-2xl">
-                        TÀI XỈU
-                    </h1>
-                    <!-- Gold Stack Decor -->
-                    <div class="absolute -right-8 top-0 text-yellow-400 text-2xl drop-shadow-md">
-                        <i class="fa-solid fa-coins"></i>
-                    </div>
-                </div>
-                <div class="text-[10px] text-yellow-200/80 bg-black/90 px-3 py-0.5 rounded-b-md font-mono border-x border-b border-yellow-600/40">
-                    Mã phiên: <span id="sessionCode" class="text-yellow-400 font-bold">#68270</span>
-                </div>
+            <div class="side-btn" id="sideTai" onclick="selectSide('TAI')">
+                <div class="side-title tai-color">TÀI</div>
+                <div class="bet-stat">11 - 17</div>
+                <div class="bet-stat" id="myBetTai">Cược: 0</div>
             </div>
 
-            <!-- Top Circular Buttons Bar -->
-            <div class="flex justify-between items-center mb-3 mt-4 px-2 relative z-10">
-                <div class="flex items-center gap-2">
-                    <button onclick="openSoiCauModal()" class="circle-btn" title="Đồ thị lịch sử (Soi cầu)">
-                        <i class="fa-solid fa-chart-line"></i>
-                    </button>
-                    <button onclick="showHelp()" class="circle-btn" title="Trợ giúp">
-                        <span class="font-black">?</span>
-                    </button>
-                    <button onclick="showInfo()" class="circle-btn" title="Thông tin">
-                        <span class="font-serif italic font-bold">i</span>
-                    </button>
+            <div class="center-plate">
+                <div class="dices">
+                    <div class="dice" id="d1">?</div>
+                    <div class="dice" id="d2">?</div>
+                    <div class="dice" id="d3">?</div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="showRank()" class="circle-btn" title="Bảng xếp hạng">
-                        <i class="fa-solid fa-trophy text-yellow-400"></i>
-                    </button>
-                    <button onclick="showChat()" class="circle-btn" title="Chat cộng đồng">
-                        <i class="fa-solid fa-comments"></i>
-                    </button>
-                    <button onclick="closeApp()" class="circle-btn text-red-400 border-red-500/80" title="Đóng">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-                </div>
+                <div class="bowl" id="bowl" style="display: none;">NẶN BÁT</div>
             </div>
 
-            <!-- INNER BOARD WITH BET SIDES & PLATE BOWL -->
-            <div class="inner-board p-3 sm:p-5 relative">
-                <div class="grid grid-cols-12 gap-2 sm:gap-4 items-center">
-
-                    <!-- LEFT SIDE: TÀI BET BOX -->
-                    <div id="boxTai" class="col-span-4 sm:col-span-4 bet-box p-2 sm:p-3 flex flex-col items-center justify-between min-h-[180px] sm:min-h-[220px]">
-                        <div class="text-2xl sm:text-4xl font-extrabold text-amber-100 tracking-wider">TÀI</div>
-                        <div class="text-[10px] sm:text-xs text-yellow-300/80 font-medium">(11 - 17)</div>
-                        
-                        <!-- Users Count -->
-                        <div class="flex items-center gap-1 text-[11px] sm:text-xs text-gray-300 bg-black/40 px-2 py-0.5 rounded-full my-1">
-                            <i class="fa-solid fa-users text-yellow-500 text-[10px]"></i>
-                            <span id="usersTai">2,457</span>
-                        </div>
-
-                        <!-- Total Bet Display -->
-                        <div class="money-pill w-full text-center py-1 px-1 my-1">
-                            <div class="text-[9px] text-gray-400 uppercase tracking-tighter">Tổng đặt</div>
-                            <div id="totalBetTai" class="text-xs sm:text-base font-bold text-red-400 truncate">1,239,890,866</div>
-                        </div>
-
-                        <!-- User Bet Status -->
-                        <div id="myBetTai" class="text-[11px] font-bold text-yellow-300 h-4">Cược: 0</div>
-
-                        <!-- Bet Action Button -->
-                        <button onclick="openBetModal('TAI')" class="w-full mt-1 py-1.5 sm:py-2 bg-gradient-to-b from-yellow-500 via-amber-600 to-yellow-800 text-black font-black text-xs sm:text-sm rounded-xl border border-yellow-300 shadow-md hover:brightness-110 active:scale-95 transition">
-                            ĐẶT CƯỢC
-                        </button>
-                    </div>
-
-                    <!-- CENTER: PLATE & BOWL & TIMER -->
-                    <div class="col-span-4 sm:col-span-4 flex flex-col items-center justify-center relative">
-
-                        <!-- Timer Top Tag -->
-                        <div class="absolute -top-4 z-20 bg-black/90 border border-yellow-500/80 px-3 py-0.5 rounded-full shadow-lg">
-                            <span id="timerText" class="text-xl sm:text-2xl font-black text-yellow-400 tracking-widest font-mono">45</span>
-                        </div>
-
-                        <!-- Plate Circle -->
-                        <div class="plate-container flex items-center justify-center my-2 scale-90 sm:scale-100">
-                            
-                            <!-- Dices inside -->
-                            <div id="diceGroup" class="flex gap-1.5 justify-center items-center z-10">
-                                <!-- Dice 1 -->
-                                <div id="dice1" class="dice"></div>
-                                <!-- Dice 2 -->
-                                <div id="dice2" class="dice"></div>
-                                <!-- Dice 3 -->
-                                <div id="dice3" class="dice"></div>
-                            </div>
-
-                            <!-- BOWL OVERLAY (FOR DRAGGING / NẶN BÁT) -->
-                            <div id="bowl" class="bowl">
-                                <div class="text-center pointer-events-none">
-                                    <div class="w-12 h-12 rounded-full border-2 border-yellow-200/50 mx-auto flex items-center justify-center bg-yellow-900/40">
-                                        <i class="fa-solid fa-hand-pointer text-yellow-200 text-lg animate-bounce"></i>
-                                    </div>
-                                    <div class="text-[10px] font-bold text-yellow-100 uppercase tracking-tighter mt-1">Nặn Bát</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Status Message below plate -->
-                        <div id="statusMessage" class="text-[11px] sm:text-xs font-bold text-yellow-300 text-center min-h-[20px]">
-                            Vui lòng chọn cửa cược!
-                        </div>
-                    </div>
-
-                    <!-- RIGHT SIDE: XỈU BET BOX -->
-                    <div id="boxXiu" class="col-span-4 sm:col-span-4 bet-box p-2 sm:p-3 flex flex-col items-center justify-between min-h-[180px] sm:min-h-[220px]">
-                        <div class="text-2xl sm:text-4xl font-extrabold text-amber-100 tracking-wider">XỈU</div>
-                        <div class="text-[10px] sm:text-xs text-yellow-300/80 font-medium">(3 - 10)</div>
-
-                        <!-- Users Count -->
-                        <div class="flex items-center gap-1 text-[11px] sm:text-xs text-gray-300 bg-black/40 px-2 py-0.5 rounded-full my-1">
-                            <i class="fa-solid fa-users text-yellow-500 text-[10px]"></i>
-                            <span id="usersXiu">3,146</span>
-                        </div>
-
-                        <!-- Total Bet Display -->
-                        <div class="money-pill w-full text-center py-1 px-1 my-1">
-                            <div class="text-[9px] text-gray-400 uppercase tracking-tighter">Tổng đặt</div>
-                            <div id="totalBetXiu" class="text-xs sm:text-base font-bold text-red-400 truncate">1,239,890,866</div>
-                        </div>
-
-                        <!-- User Bet Status -->
-                        <div id="myBetXiu" class="text-[11px] font-bold text-yellow-300 h-4">Cược: 0</div>
-
-                        <!-- Bet Action Button -->
-                        <button onclick="openBetModal('XIU')" class="w-full mt-1 py-1.5 sm:py-2 bg-gradient-to-b from-yellow-500 via-amber-600 to-yellow-800 text-black font-black text-xs sm:text-sm rounded-xl border border-yellow-300 shadow-md hover:brightness-110 active:scale-95 transition">
-                            ĐẶT CƯỢC
-                        </button>
-                    </div>
-
-                </div>
-
-                <!-- Bottom Floating Controls: History & Nan mode toggle -->
-                <div class="flex justify-between items-center mt-3 pt-2 border-t border-yellow-900/50">
-                    <button onclick="openHistoryListModal()" class="circle-btn" title="Lịch sử phiên chi tiết">
-                        <i class="fa-solid fa-list-ol text-xs"></i>
-                    </button>
-
-                    <!-- History Dots Row (18-20 dots) -->
-                    <div id="historyBeadsRow" class="flex gap-1 overflow-x-auto px-2 py-1 items-center max-w-[80%] scrollbar-none">
-                        <!-- Dynamic Beads generated here -->
-                    </div>
-
-                    <button onclick="toggleNanMode()" id="nanToggleBtn" class="circle-btn text-yellow-400" title="Bật/Tắt chế độ Nặn">
-                        <i class="fa-solid fa-hand"></i>
-                    </button>
-                </div>
-
-            </div>
-        </div>
-    </main>
-
-    <!-- Footer Bar -->
-    <footer class="w-full max-w-5xl flex items-center justify-between text-[11px] text-gray-400 px-4 py-2 bg-black/40 rounded-xl border border-yellow-900/30">
-        <div>Mô phỏng Tài Xỉu Sunwin • 100% Thuật toán ngẫu nhiên</div>
-        <div class="flex gap-4">
-            <span class="text-yellow-400 font-bold">Hệ thống: Hoạt động</span>
-            <span>Hỗ trợ 24/7</span>
-        </div>
-    </footer>
-
-
-    <!-- ================= MODALS & POPUPS ================= -->
-
-    <!-- 1. BETTING INPUT MODAL -->
-    <div id="betModal" class="fixed inset-0 z-50 modal-bg hidden flex items-center justify-center p-4">
-        <div class="modal-content w-full max-w-sm p-5 relative text-center">
-            <button onclick="closeBetModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-            
-            <h3 class="text-xl font-bold text-yellow-400 mb-1">ĐẶT CƯỢC CỬA <span id="modalBetSideName" class="text-white">TÀI</span></h3>
-            <p class="text-xs text-gray-400 mb-4">Nhập số tiền muốn đặt cược cho phiên hiện tại</p>
-
-            <div class="mb-4">
-                <input type="number" id="customBetInput" value="10000" min="1000" step="1000" 
-                    class="w-full bg-black/80 border-2 border-yellow-600 rounded-xl py-2 px-4 text-center text-xl font-bold text-emerald-400 focus:outline-none focus:border-yellow-400">
-            </div>
-
-            <!-- Quick Chips -->
-            <div class="grid grid-cols-4 gap-2 mb-4">
-                <button onclick="addChipValue(10000)" class="py-1.5 bg-amber-950/80 border border-yellow-600/60 rounded-lg text-xs font-bold text-yellow-300 hover:bg-amber-800">+10K</button>
-                <button onclick="addChipValue(50000)" class="py-1.5 bg-amber-950/80 border border-yellow-600/60 rounded-lg text-xs font-bold text-yellow-300 hover:bg-amber-800">+50K</button>
-                <button onclick="addChipValue(100000)" class="py-1.5 bg-amber-950/80 border border-yellow-600/60 rounded-lg text-xs font-bold text-yellow-300 hover:bg-amber-800">+100K</button>
-                <button onclick="setAllInValue()" class="py-1.5 bg-red-950/80 border border-red-500/60 rounded-lg text-xs font-bold text-red-300 hover:bg-red-800">Tất tay</button>
-            </div>
-
-            <div class="flex gap-2">
-                <button onclick="closeBetModal()" class="w-1/2 py-2 bg-gray-700 text-white font-bold text-sm rounded-xl hover:bg-gray-600">HỦY</button>
-                <button onclick="confirmBet()" class="w-1/2 py-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-black font-extrabold text-sm rounded-xl shadow-lg hover:brightness-110">XÁC NHẬN</button>
+            <div class="side-btn" id="sideXiu" onclick="selectSide('XIU')">
+                <div class="side-title xiu-color">XỈU</div>
+                <div class="bet-stat">3 - 10</div>
+                <div class="bet-stat" id="myBetXiu">Cược: 0</div>
             </div>
         </div>
     </div>
 
-
-    <!-- 2. SOI CẦU MATRIX & GRAPH MODAL -->
-    <div id="soiCauModal" class="fixed inset-0 z-50 modal-bg hidden flex items-center justify-center p-3 sm:p-4">
-        <div class="modal-content w-full max-w-2xl p-4 sm:p-6 relative">
-            <button onclick="closeSoiCauModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-
-            <h3 class="text-lg sm:text-xl font-bold text-yellow-400 mb-3 text-center flex items-center justify-center gap-2">
-                <i class="fa-solid fa-chart-line"></i> BẢNG SOI CẦU MA TRẬN & THỐNG KÊ
-            </h3>
-
-            <!-- Stats Summary -->
-            <div class="flex justify-around bg-black/60 py-2 rounded-xl border border-yellow-900/50 mb-3 text-xs sm:text-sm">
-                <div>Tổng Tài: <span id="statTaiCount" class="text-red-400 font-bold">0</span></div>
-                <div>Tổng Xỉu: <span id="statXiuCount" class="text-blue-400 font-bold">0</span></div>
-                <div>Tỷ lệ Tài: <span id="statTaiRate" class="text-yellow-300 font-bold">50%</span></div>
-            </div>
-
-            <!-- Matrix Bead Grid -->
-            <div class="mb-3">
-                <div class="text-xs text-yellow-200/80 font-bold mb-1">Ma trận cầu (Bệt, 1-1, 2-2):</div>
-                <div id="matrixGrid" class="matrix-grid">
-                    <!-- Dynamic Matrix Cells -->
-                </div>
-            </div>
-
-            <!-- Score Trend Line Chart Simulation -->
-            <div>
-                <div class="text-xs text-yellow-200/80 font-bold mb-1">Biểu đồ tổng điểm phiên:</div>
-                <div class="bg-black/90 p-2 rounded-lg border border-yellow-900/40 h-32 relative flex items-end gap-1 overflow-x-auto" id="chartBarContainer">
-                    <!-- Dynamic Bars/Points -->
-                </div>
-            </div>
+    <div class="control-bar">
+        <div class="chips">
+            <button class="chip-btn" onclick="addChip(10000)">+10K</button>
+            <button class="chip-btn" onclick="addChip(50000)">+50K</button>
+            <button class="chip-btn" onclick="addChip(100000)">+100K</button>
+            <button class="chip-btn" onclick="setAllIn()">Tất tay</button>
         </div>
+        <div id="status-msg" style="color: #ffd700; font-weight: bold;">Chọn cửa và đặt cược...</div>
+        <div class="history-grid" id="historyGrid"></div>
     </div>
+</div>
 
+<script>
+    // Tự động căn chỉnh Scale 100% không bị che màn hình
+    function resizeGame() {
+        const scaler = document.getElementById('game-scaler');
+        const warning = document.getElementById('portrait-warning');
+        const w = window.innerWidth;
+        const h = window.innerHeight;
 
-    <!-- 3. DETAILED HISTORY LIST MODAL -->
-    <div id="historyListModal" class="fixed inset-0 z-50 modal-bg hidden flex items-center justify-center p-4">
-        <div class="modal-content w-full max-w-md p-5 relative">
-            <button onclick="closeHistoryListModal()" class="absolute top-3 right-3 text-gray-400 hover:text-white">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-            <h3 class="text-lg font-bold text-yellow-400 mb-3 text-center">LỊCH SỬ PHIÊN GẦN ĐÂY</h3>
-            
-            <div class="max-h-72 overflow-y-auto pr-1">
-                <table class="w-full text-left text-xs">
-                    <thead class="bg-black/80 text-yellow-500 sticky top-0">
-                        <tr>
-                            <th class="p-2">Phiên</th>
-                            <th class="p-2 text-center">Xúc xắc</th>
-                            <th class="p-2 text-center">Điểm</th>
-                            <th class="p-2 text-right">Kết quả</th>
-                        </tr>
-                    </thead>
-                    <tbody id="historyTableBody" class="divide-y divide-yellow-900/30 text-gray-300">
-                        <!-- Dynamic Rows -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- 4. GENERAL MESSAGE MODAL -->
-    <div id="msgModal" class="fixed inset-0 z-50 modal-bg hidden flex items-center justify-center p-4">
-        <div class="modal-content w-full max-w-xs p-5 relative text-center">
-            <h3 id="msgModalTitle" class="text-lg font-bold text-yellow-400 mb-2">Thông báo</h3>
-            <p id="msgModalBody" class="text-xs text-gray-300 mb-4">Nội dung thông báo</p>
-            <button onclick="closeMsgModal()" class="w-full py-2 bg-yellow-600 text-black font-bold text-xs rounded-xl hover:bg-yellow-500">ĐÓNG</button>
-        </div>
-    </div>
-
-
-    <!-- ================= JAVASCRIPT GAME ENGINE ================= -->
-    <script>
-        /* ================= AUDIO SYSTEM (WEB AUDIO API) ================= */
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        let soundEnabled = true;
-
-        function toggleAudio() {
-            soundEnabled = !soundEnabled;
-            const btn = document.getElementById('soundBtn');
-            if (soundEnabled) {
-                btn.innerHTML = `<i class="fa-solid fa-volume-high"></i>`;
-                btn.classList.remove('text-red-400');
-            } else {
-                btn.innerHTML = `<i class="fa-solid fa-volume-xmark"></i>`;
-                btn.classList.add('text-red-400');
-            }
+        if (h > w) {
+            warning.style.display = 'flex';
+        } else {
+            warning.style.display = 'none';
         }
 
-        function playSound(type) {
-            if (!soundEnabled) return;
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+        const scaleX = w / 1280;
+        const scaleY = h / 720;
+        const scale = Math.min(scaleX, scaleY);
+        scaler.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', resizeGame);
+    window.addEventListener('load', resizeGame);
 
-            try {
-                if (type === 'click') {
-                    let osc = audioCtx.createOscillator();
-                    let gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.05);
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.05);
-                } 
-                else if (type === 'win') {
-                    let notes = [523.25, 659.25, 783.99, 1046.50];
-                    notes.forEach((freq, i) => {
-                        let osc = audioCtx.createOscillator();
-                        let gain = audioCtx.createGain();
-                        osc.type = 'triangle';
-                        osc.frequency.value = freq;
-                        let st = audioCtx.currentTime + (i * 0.08);
-                        gain.gain.setValueAtTime(0.25, st);
-                        gain.gain.exponentialRampToValueAtTime(0.001, st + 0.35);
-                        osc.connect(gain);
-                        gain.connect(audioCtx.destination);
-                        osc.start(st);
-                        osc.stop(st + 0.35);
-                    });
-                } 
-                else if (type === 'lose') {
-                    let osc = audioCtx.createOscillator();
-                    let gain = audioCtx.createGain();
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(180, audioCtx.currentTime);
-                    osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.3);
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.3);
-                }
-                else if (type === 'shake') {
-                    let osc = audioCtx.createOscillator();
-                    let gain = audioCtx.createGain();
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.1);
-                }
-            } catch (e) {
-                console.log('Audio playback error', e);
-            }
+    // Chống thu phóng thủ công
+    document.addEventListener('gesturestart', e => e.preventDefault());
+    document.addEventListener('dblclick', e => e.preventDefault());
+
+    // Âm thanh Web Audio API
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        if (type === 'chip') {
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.05);
+        } else if (type === 'win') {
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'lose') {
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
         }
+    }
 
+    // Logic Game
+    let balance = 200000;
+    let selectedSide = null;
+    let betAmount = 0;
+    let timeLeft = 45;
+    let gameState = 'BET';
+    let history = [];
+    let currentTotal = 0, currentOutcome = null;
 
-        /* ================= GAME STATE & VARIABLES ================= */
-        let userBalance = 200000;
-        let sessionCode = 68270;
-        let timer = 45;
-        let gameState = 'BETTING'; // 'BETTING', 'NANNING', 'RESULT'
-        let isNanMode = true;
-
-        let activeBetSide = null; // 'TAI' or 'XIU'
-        let currentBetAmount = 0;
-        let pendingBetSide = null;
-
-        let currentDices = [1, 2, 3];
-        let currentTotal = 6;
-        let currentOutcome = 'XIU';
-
-        // Fake live betting counters
-        let usersTaiCount = 2457;
-        let usersXiuCount = 3146;
-        let totalBetTaiVal = 1239890866;
-        let totalBetXiuVal = 1239890866;
-
-        // History Data Array
-        let historyData = [];
-
-        // Pre-fill initial fake history (25 rounds)
-        function initSeedHistory() {
-            let mockTypes = ['TAI','TAI','XIU','XIU','XIU','TAI','XIU','TAI','TAI','TAI','TAI','XIU','XIU','TAI','XIU','XIU','TAI','TAI','XIU','TAI','TAI','XIU','XIU','XIU','TAI'];
-            mockTypes.forEach((type, idx) => {
-                let d1 = Math.floor(Math.random() * 6) + 1;
-                let d2 = Math.floor(Math.random() * 6) + 1;
-                let d3 = Math.floor(Math.random() * 6) + 1;
-                let total = d1 + d2 + d3;
-                let realType = total >= 11 ? 'TAI' : 'XIU';
-                historyData.push({
-                    session: sessionCode - (mockTypes.length - idx),
-                    dices: [d1, d2, d3],
-                    total: total,
-                    type: realType
-                });
-            });
+    function addChip(val) {
+        if (gameState !== 'BET' || !selectedSide) return;
+        if (balance >= val) {
+            betAmount += val;
+            balance -= val;
+            updateUI();
+            playSound('chip');
         }
+    }
+    function setAllIn() {
+        if (gameState !== 'BET' || !selectedSide) return;
+        betAmount += balance;
+        balance = 0;
+        updateUI();
+        playSound('chip');
+    }
+    function selectSide(side) {
+        if (gameState !== 'BET') return;
+        selectedSide = side;
+        document.getElementById('sideTai').classList.toggle('selected', side === 'TAI');
+        document.getElementById('sideXiu').classList.toggle('selected', side === 'XIU');
+        playSound('chip');
+    }
 
+    setInterval(() => {
+        if (gameState === 'BET') {
+            timeLeft--;
+            document.getElementById('timer').innerText = timeLeft + 's';
+            if (timeLeft <= 0) startNan();
+        }
+    }, 1000);
 
-        /* ================= INITIALIZATION ================= */
-        window.onload = function() {
-            initSeedHistory();
-            renderDice([3, 4, 5]);
-            renderHistoryBeads();
-            startTimerLoop();
-            initBowlDragEvents();
-            updateUIBalance();
-            startCounterFluctuations();
+    function startNan() {
+        gameState = 'NAN';
+        document.getElementById('timer').innerText = 'NẶN!';
+        document.getElementById('bowl').style.display = 'flex';
+        document.getElementById('bowl').style.transform = 'translate(0,0)';
+        
+        let d1 = Math.floor(Math.random()*6)+1;
+        let d2 = Math.floor(Math.random()*6)+1;
+        let d3 = Math.floor(Math.random()*6)+1;
+        currentTotal = d1 + d2 + d3;
+        currentOutcome = currentTotal >= 11 ? 'TAI' : 'XIU';
+
+        document.getElementById('d1').innerText = d1;
+        document.getElementById('d2').innerText = d2;
+        document.getElementById('d3').innerText = d3;
+
+        initBowlDrag();
+    }
+
+    function initBowlDrag() {
+        let bowl = document.getElementById('bowl');
+        let dragging = false, startX, startY;
+
+        const onStart = e => {
+            dragging = true;
+            let c = e.touches ? e.touches[0] : e;
+            startX = c.clientX; startY = c.clientY;
         };
-
-
-        /* ================= TIMER & GAME LOOP ================= */
-        function startTimerLoop() {
-            setInterval(() => {
-                if (gameState === 'BETTING') {
-                    timer--;
-                    document.getElementById('timerText').innerText = timer < 10 ? '0' + timer : timer;
-
-                    if (timer <= 0) {
-                        endBettingPhase();
-                    }
-                }
-            }, 1000);
-        }
-
-        function endBettingPhase() {
-            gameState = 'NANNING';
-            document.getElementById('timerText').innerText = '00';
-
-            // Generate Dice Result
-            let d1 = Math.floor(Math.random() * 6) + 1;
-            let d2 = Math.floor(Math.random() * 6) + 1;
-            let d3 = Math.floor(Math.random() * 6) + 1;
-            currentDices = [d1, d2, d3];
-            currentTotal = d1 + d2 + d3;
-            currentOutcome = currentTotal >= 11 ? 'TAI' : 'XIU';
-
-            renderDice(currentDices);
-            playSound('shake');
-
-            // Cover bowl
-            resetBowlPosition();
-            document.getElementById('bowl').style.display = 'flex';
-
-            if (isNanMode) {
-                document.getElementById('statusMessage').innerText = 'Hết giờ cược! Hãy kéo (nặn) bát để xem kết quả!';
-            } else {
-                // If nan mode disabled, open automatically after 1.5s
-                document.getElementById('statusMessage').innerText = 'Mở bát...';
-                setTimeout(() => {
-                    revealResultFully();
-                }, 1500);
-            }
-        }
-
-        function revealResultFully() {
-            if (gameState === 'RESULT') return;
-            gameState = 'RESULT';
-
-            // Hide bowl
-            document.getElementById('bowl').style.display = 'none';
-
-            // Highlight Winning Box
-            const boxTai = document.getElementById('boxTai');
-            const boxXiu = document.getElementById('boxXiu');
-            boxTai.classList.remove('winner');
-            boxXiu.classList.remove('winner');
-
-            if (currentOutcome === 'TAI') {
-                boxTai.classList.add('winner');
-            } else {
-                boxXiu.classList.add('winner');
-            }
-
-            // Message & Payout
-            let statusText = `Kết quả: ${currentTotal} điểm (${currentOutcome})`;
-            if (activeBetSide) {
-                if (activeBetSide === currentOutcome) {
-                    let winAmount = currentBetAmount * 2;
-                    userBalance += winAmount;
-                    statusText += ` • BẠN THẮNG +${winAmount.toLocaleString()} VNĐ!`;
-                    playSound('win');
-                } else {
-                    statusText += ` • BẠN THUA -${currentBetAmount.toLocaleString()} VNĐ!`;
-                    playSound('lose');
-                }
-            }
-
-            document.getElementById('statusMessage').innerHTML = `<span class="text-yellow-300 font-bold">${statusText}</span>`;
-            updateUIBalance();
-
-            // Push History
-            sessionCode++;
-            document.getElementById('sessionCode').innerText = '#' + sessionCode;
-            historyData.push({
-                session: sessionCode,
-                dices: [...currentDices],
-                total: currentTotal,
-                type: currentOutcome
-            });
-            renderHistoryBeads();
-
-            // Reset for next round after 5 seconds
-            setTimeout(startNewRound, 5000);
-        }
-
-        function startNewRound() {
-            gameState = 'BETTING';
-            timer = 45;
-            activeBetSide = null;
-            currentBetAmount = 0;
-
-            document.getElementById('myBetTai').innerText = 'Cược: 0';
-            document.getElementById('myBetXiu').innerText = 'Cược: 0';
-            document.getElementById('boxTai').classList.remove('winner', 'active');
-            document.getElementById('boxXiu').classList.remove('winner', 'active');
-            document.getElementById('statusMessage').innerText = 'Vui lòng chọn cửa cược!';
-            document.getElementById('bowl').style.display = 'none';
-        }
-
-
-        /* ================= DRAG / NẶN BÁT EVENTS ================= */
-        function initBowlDragEvents() {
-            const bowl = document.getElementById('bowl');
-            let isDragging = false;
-            let startX, startY;
-
-            // Prevent touch scrolling on double tap or gestures
-            document.addEventListener('gesturestart', (e) => e.preventDefault());
-            document.addEventListener('touchmove', (e) => {
-                if (e.scale !== 1) e.preventDefault();
-            }, { passive: false });
-
-            function startDrag(e) {
-                if (gameState !== 'NANNING') return;
-                isDragging = true;
-                const p = e.touches ? e.touches[0] : e;
-                startX = p.clientX;
-                startY = p.clientY;
-            }
-
-            function moveDrag(e) {
-                if (!isDragging) return;
-                const p = e.touches ? e.touches[0] : e;
-                const dx = p.clientX - startX;
-                const dy = p.clientY - startY;
-
-                bowl.style.transform = `translate(${dx}px, ${dy}px)`;
-
-                // Check distance
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > 75) {
-                    isDragging = false;
-                    revealResultFully();
-                }
-            }
-
-            function endDrag() {
-                if (!isDragging) return;
-                isDragging = false;
-                // Elastic snap back if not pulled far enough
-                bowl.style.transform = `translate(0px, 0px)`;
-            }
-
-            bowl.addEventListener('mousedown', startDrag);
-            window.addEventListener('mousemove', moveDrag);
-            window.addEventListener('mouseup', endDrag);
-
-            bowl.addEventListener('touchstart', startDrag);
-            window.addEventListener('touchmove', moveDrag);
-            window.addEventListener('touchend', endDrag);
-        }
-
-        function resetBowlPosition() {
-            const bowl = document.getElementById('bowl');
-            bowl.style.transform = `translate(0px, 0px)`;
-        }
-
-        function toggleNanMode() {
-            isNanMode = !isNanMode;
-            playSound('click');
-            const btn = document.getElementById('nanToggleBtn');
-            if (isNanMode) {
-                btn.classList.add('text-yellow-400');
-                btn.classList.remove('text-gray-500');
-                showMsg('Chế độ Nặn', 'Đã BẬT chế độ tự tay nặn bát!');
-            } else {
-                btn.classList.remove('text-yellow-400');
-                btn.classList.add('text-gray-500');
-                showMsg('Chế độ Nặn', 'Đã TẮT chế độ nặn bát (Tự động mở).');
-            }
-        }
-
-
-        /* ================= DICE RENDERING ================= */
-        const diceDotPositions = {
-            1: [4],
-            2: [0, 8],
-            3: [0, 4, 8],
-            4: [0, 2, 6, 8],
-            5: [0, 2, 4, 6, 8],
-            6: [0, 2, 3, 5, 6, 8]
+        const onMove = e => {
+            if (!dragging) return;
+            let c = e.touches ? e.touches[0] : e;
+            let dx = c.clientX - startX, dy = c.clientY - startY;
+            bowl.style.transform = `translate(${dx}px, ${dy}px)`;
+            if (Math.sqrt(dx*dx + dy*dy) > 70) { dragging = false; reveal(); }
         };
+        const onEnd = () => dragging = false;
 
-        function renderDice(diceArray) {
-            for (let i = 1; i <= 3; i++) {
-                const diceEl = document.getElementById('dice' + i);
-                diceEl.innerHTML = '';
-                const val = diceArray[i - 1];
-                const activeDots = diceDotPositions[val] || [];
+        bowl.onmousedown = onStart; window.onmousemove = onMove; window.onmouseup = onEnd;
+        bowl.ontouchstart = onStart; window.ontouchmove = onMove; window.ontouchend = onEnd;
+    }
 
-                for (let cell = 0; cell < 9; cell++) {
-                    if (activeDots.includes(cell)) {
-                        const dot = document.createElement('div');
-                        dot.className = 'dot';
-                        diceEl.appendChild(dot);
-                    } else {
-                        const emptyDiv = document.createElement('div');
-                        diceEl.appendChild(emptyDiv);
-                    }
-                }
+    function reveal() {
+        if (gameState !== 'NAN') return;
+        gameState = 'RESULT';
+        document.getElementById('bowl').style.display = 'none';
+
+        let win = selectedSide === currentOutcome;
+        if (win && betAmount > 0) {
+            balance += betAmount * 2;
+            playSound('win');
+            document.getElementById('status-msg').innerText = `THẮNG +${(betAmount*2).toLocaleString()} VNĐ`;
+        } else if (betAmount > 0) {
+            playSound('lose');
+            document.getElementById('status-msg').innerText = `THUA -${betAmount.toLocaleString()} VNĐ`;
+        }
+
+        if (currentOutcome === 'TAI') document.getElementById('sideTai').classList.add('winner');
+        else document.getElementById('sideXiu').classList.add('winner');
+
+        history.push({ type: currentOutcome, score: currentTotal });
+        renderHistory();
+        updateUI();
+
+        setTimeout(reset, 4000);
+    }
+
+    function reset() {
+        gameState = 'BET'; timeLeft = 45; selectedSide = null; betAmount = 0;
+        document.getElementById('sideTai').className = 'side-btn';
+        document.getElementById('sideXiu').className = 'side-btn';
+        document.getElementById('status-msg').innerText = 'Chọn cửa và đặt cược...';
+        document.getElementById('d1').innerText = '?';
+        document.getElementById('d2').innerText = '?';
+        document.getElementById('d3').innerText = '?';
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('balance').innerText = balance.toLocaleString();
+        document.getElementById('myBetTai').innerText = `Cược: ${selectedSide==='TAI'?betAmount.toLocaleString():0}`;
+        document.getElementById('myBetXiu').innerText = `Cược: ${selectedSide==='XIU'?betAmount.toLocaleString():0}`;
+    }
+
+    function renderHistory() {
+        let grid = document.getElementById('historyGrid');
+        grid.innerHTML = '';
+        let mat = Array(6).fill(null).map(()=>Array(25).fill(null));
+        let r = 0, c = 0;
+        for (let i = 0; i < history.length; i++) {
+            if (i > 0 && history[i].type !== history[i-1].type) { c++; r = 0; }
+            else if (r >= 6) { c++; r = 0; }
+            if (c >= 25) { history.shift(); i--; continue; }
+            mat[r][c] = history[i]; r++;
+        }
+        for (let row = 0; row < 6; row++) {
+            for (let col = 0; col < 25; col++) {
+                let cell = mat[row][col];
+                let div = document.createElement('div');
+                div.className = cell ? `dot ${cell.type==='TAI'?'dot-tai':'dot-xiu'}` : 'dot dot-empty';
+                if (cell) div.innerText = cell.score;
+                grid.appendChild(div);
             }
         }
-
-
-        /* ================= BETTING LOGIC & MODAL ================= */
-        function openBetModal(side) {
-            if (gameState !== 'BETTING') {
-                showMsg('Thông báo', 'Đã hết thời gian đặt cược cho phiên này!');
-                return;
-            }
-            playSound('click');
-            pendingBetSide = side;
-            document.getElementById('modalBetSideName').innerText = side === 'TAI' ? 'TÀI (11-17)' : 'XỈU (3-10)';
-            document.getElementById('betModal').classList.remove('hidden');
-        }
-
-        function closeBetModal() {
-            playSound('click');
-            document.getElementById('betModal').classList.add('hidden');
-        }
-
-        function addChipValue(val) {
-            playSound('click');
-            const input = document.getElementById('customBetInput');
-            let current = parseInt(input.value) || 0;
-            input.value = current + val;
-        }
-
-        function setAllInValue() {
-            playSound('click');
-            document.getElementById('customBetInput').value = userBalance;
-        }
-
-        function confirmBet() {
-            const amount = parseInt(document.getElementById('customBetInput').value);
-            if (isNaN(amount) || amount <= 0) {
-                showMsg('Cảnh báo', 'Vui lòng nhập số tiền cược hợp lệ!');
-                return;
-            }
-            if (amount > userBalance) {
-                showMsg('Cảnh báo', 'Số dư tài khoản của bạn không đủ!');
-                return;
-            }
-
-            playSound('click');
-            userBalance -= amount;
-            activeBetSide = pendingBetSide;
-            currentBetAmount += amount;
-
-            updateUIBalance();
-
-            const boxTai = document.getElementById('boxTai');
-            const boxXiu = document.getElementById('boxXiu');
-
-            if (activeBetSide === 'TAI') {
-                boxTai.classList.add('active');
-                boxXiu.classList.remove('active');
-                document.getElementById('myBetTai').innerText = `Cược: ${currentBetAmount.toLocaleString()}`;
-            } else {
-                boxXiu.classList.add('active');
-                boxTai.classList.remove('active');
-                document.getElementById('myBetXiu').innerText = `Cược: ${currentBetAmount.toLocaleString()}`;
-            }
-
-            closeBetModal();
-        }
-
-        function updateUIBalance() {
-            document.getElementById('userBalance').innerText = userBalance.toLocaleString();
-        }
-
-        function depositMoney() {
-            playSound('click');
-            userBalance += 500000;
-            updateUIBalance();
-            showMsg('Nạp tiền', 'Đã thêm +500,000 VNĐ vào tài khoản!');
-        }
-
-
-        /* ================= HISTORY BEADS & MATRIX RENDERERS ================= */
-        function renderHistoryBeads() {
-            const container = document.getElementById('historyBeadsRow');
-            container.innerHTML = '';
-
-            // Show last 20 history beads
-            const recent = historyData.slice(-20);
-            recent.forEach(item => {
-                const bead = document.createElement('div');
-                bead.className = `history-bead ${item.type === 'TAI' ? 'bead-tai' : 'bead-xiu-white'}`;
-                bead.innerText = item.total;
-                bead.title = `Phiên #${item.session}: ${item.type} (${item.total})`;
-                container.appendChild(bead);
-            });
-        }
-
-        // Open Soi Cau Modal (Matrix Grid & Score Trend Chart)
-        function openSoiCauModal() {
-            playSound('click');
-            document.getElementById('soiCauModal').classList.remove('hidden');
-
-            // Render stats
-            let taiCnt = 0, xiuCnt = 0;
-            historyData.forEach(h => {
-                if (h.type === 'TAI') taiCnt++; else xiuCnt++;
-            });
-            document.getElementById('statTaiCount').innerText = taiCnt;
-            document.getElementById('statXiuCount').innerText = xiuCnt;
-            let total = historyData.length || 1;
-            document.getElementById('statTaiRate').innerText = Math.round((taiCnt / total) * 100) + '%';
-
-            // Build Matrix Grid (6 rows x N columns)
-            const gridContainer = document.getElementById('matrixGrid');
-            gridContainer.innerHTML = '';
-
-            const maxRows = 6;
-            const maxCols = 25;
-            let matrix = Array(maxRows).fill(null).map(() => Array(maxCols).fill(null));
-
-            let r = 0, c = 0;
-            for (let i = 0; i < historyData.length; i++) {
-                let item = historyData[i];
-                if (i > 0 && item.type !== historyData[i - 1].type) {
-                    c++; r = 0;
-                } else if (r >= maxRows) {
-                    c++; r = 0;
-                }
-                if (c >= maxCols) {
-                    historyData.shift();
-                    i--;
-                    openSoiCauModal();
-                    return;
-                }
-                matrix[r][c] = item;
-                r++;
-            }
-
-            for (let row = 0; row < maxRows; row++) {
-                for (let col = 0; col < maxCols; col++) {
-                    let cellData = matrix[row][col];
-                    let div = document.createElement('div');
-                    if (cellData) {
-                        div.className = `matrix-cell ${cellData.type === 'TAI' ? 'bg-red-600 text-white' : 'bg-gray-200 text-black'}`;
-                        div.innerText = cellData.total;
-                    } else {
-                        div.className = 'matrix-cell bg-white/5';
-                    }
-                    gridContainer.appendChild(div);
-                }
-            }
-
-            // Render Score Bar Chart
-            const chartContainer = document.getElementById('chartBarContainer');
-            chartContainer.innerHTML = '';
-            const recent = historyData.slice(-25);
-
-            recent.forEach(h => {
-                const bar = document.createElement('div');
-                const heightPct = Math.round(((h.total - 3) / 15) * 100);
-                bar.className = `flex-1 rounded-t flex flex-col justify-end items-center text-[9px] font-bold ${h.type === 'TAI' ? 'bg-red-500/80 text-white' : 'bg-blue-400/80 text-black'}`;
-                bar.style.height = Math.max(heightPct, 15) + '%';
-                bar.innerText = h.total;
-                chartContainer.appendChild(bar);
-            });
-        }
-
-        function closeSoiCauModal() {
-            playSound('click');
-            document.getElementById('soiCauModal').classList.add('hidden');
-        }
-
-
-        // Open History List Modal
-        function openHistoryListModal() {
-            playSound('click');
-            document.getElementById('historyListModal').classList.remove('hidden');
-
-            const tbody = document.getElementById('historyTableBody');
-            tbody.innerHTML = '';
-
-            const rev = [...historyData].reverse();
-            rev.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-2 font-mono text-yellow-300">#${item.session}</td>
-                    <td class="p-2 text-center font-bold text-gray-300">${item.dices.join(' - ')}</td>
-                    <td class="p-2 text-center font-bold">${item.total}</td>
-                    <td class="p-2 text-right font-extrabold ${item.type === 'TAI' ? 'text-red-400' : 'text-blue-400'}">${item.type}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function closeHistoryListModal() {
-            playSound('click');
-            document.getElementById('historyListModal').classList.add('hidden');
-        }
-
-
-        /* ================= DYNAMIC BOT COUNTERS ================= */
-        function startCounterFluctuations() {
-            setInterval(() => {
-                if (gameState === 'BETTING') {
-                    usersTaiCount += Math.floor(Math.random() * 7) - 3;
-                    usersXiuCount += Math.floor(Math.random() * 7) - 3;
-                    totalBetTaiVal += Math.floor(Math.random() * 1500000);
-                    totalBetXiuVal += Math.floor(Math.random() * 1500000);
-
-                    document.getElementById('usersTai').innerText = usersTaiCount.toLocaleString();
-                    document.getElementById('usersXiu').innerText = usersXiuCount.toLocaleString();
-                    document.getElementById('totalBetTai').innerText = totalBetTaiVal.toLocaleString();
-                    document.getElementById('totalBetXiu').innerText = totalBetXiuVal.toLocaleString();
-                }
-            }, 2000);
-        }
-
-
-        /* ================= HELPER SYSTEM MODALS ================= */
-        function showMsg(title, body) {
-            document.getElementById('msgModalTitle').innerText = title;
-            document.getElementById('msgModalBody').innerText = body;
-            document.getElementById('msgModal').classList.remove('hidden');
-        }
-
-        function closeMsgModal() {
-            playSound('click');
-            document.getElementById('msgModal').classList.add('hidden');
-        }
-
-        function showHelp() {
-            playSound('click');
-            showMsg('Hướng dẫn', 'Luật chơi: 3 viên xí ngầu lắc ra tổng điểm từ 3-10 là XỈU, từ 11-17 là TÀI. Tỷ lệ ăn 1:1.');
-        }
-
-        function showInfo() {
-            playSound('click');
-            showMsg('Thông tin trò chơi', 'Sunwin Tài Xỉu Simulator v2.5 • Chuẩn thuật toán ngẫu nhiên.');
-        }
-
-        function showRank() {
-            playSound('click');
-            showMsg('Bảng xếp hạng', 'TOP 1: đaingia888 (+52,000,000 VNĐ)\nTOP 2: hello22 (+200,000 VNĐ)\nTOP 3: phantom99 (+150,000 VNĐ)');
-        }
-
-        function showChat() {
-            playSound('click');
-            showMsg('Chat cộng đồng', 'Kênh Chat Sunwin đang hoạt động sôi nổi!');
-        }
-
-        function closeApp() {
-            playSound('click');
-            showMsg('Đóng', 'Bạn đã đóng giao diện trò chơi.');
-        }
-    </script>
+    }
+    renderHistory();
+</script>
 </body>
 </html>
