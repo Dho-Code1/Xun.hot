@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Tài Xỉu Sunwin Simulator</title>
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,16 +14,34 @@
             box-sizing: border-box;
             user-select: none;
             -webkit-user-select: none;
+            -webkit-touch-callout: none;
             font-family: 'Montserrat', sans-serif;
+        }
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden !important;
+            touch-action: none !important;
+            margin: 0;
+            padding: 0;
+            position: fixed;
         }
         body {
             background-color: #05020a;
             background-image: 
                 radial-gradient(circle at 50% 30%, #2b0e3f 0%, #0d0417 70%, #030107 100%);
             color: #fff;
-            min-height: 100vh;
-            overflow-x: hidden;
-            touch-action: manipulation;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Landscape enforce orientation prompt for portrait mobile */
+        @media screen and (orientation: portrait) and (max-width: 768px) {
+            #rotatePrompt {
+                display: flex !important;
+            }
         }
 
         /* Gold Gradient Borders & Metals */
@@ -266,17 +284,17 @@
         }
     </style>
 </head>
-<body class="flex flex-col items-center justify-between min-h-screen p-2 md:p-4">
+<body class="w-full h-full p-1 sm:p-3 overflow-hidden select-none">
+
+    <!-- Portrait Device Rotation Warning Screen -->
+    <div id="rotatePrompt" class="fixed inset-0 z-50 bg-black/95 flex-col items-center justify-center p-6 text-center hidden">
+        <i class="fa-solid fa-mobile-screen-button text-yellow-400 text-6xl animate-pulse mb-4 transform rotate-90"></i>
+        <h2 class="text-xl font-bold text-yellow-300 mb-2">VUI LÒNG XOAY NGANG MÀN HÌNH</h2>
+        <p class="text-sm text-gray-300">Xoay thiết bị của bạn sang chế độ xoay ngang (Landscape) để trải nghiệm giao diện game đầy đủ nhất!</p>
+    </div>
 
     <!-- Top Navigation Header -->
-    <header class="w-full max-w-5xl flex items-center justify-between px-3 py-2 bg-black/40 backdrop-blur-md rounded-2xl border border-yellow-700/40 mb-2">
-        <div class="flex items-center gap-2">
-            <div class="w-10 h-10 rounded-full border-2 border-yellow-500 overflow-hidden bg-purple-900 flex items-center justify-center shadow-lg">
-                <i class="fa-solid fa-user-ninja text-yellow-400 text-xl"></i>
-            </div>
-            <div>
-                <div class="text-xs text-gray-400 font-semibold">Tài khoản</div>
-                <div class="text-sm font-bold text-yellow-300">hello22</div>
+    <header class="w-full max-w-5xl flex items-center justify-between px-3 py-1.5 bg-black/40 backdrop-blur-md rounded-2xl border border-yellow-700/40 shrink-0">
             </div>
         </div>
 
@@ -302,7 +320,7 @@
     </header>
 
     <!-- Main Game Container -->
-    <main class="w-full flex-1 flex items-center justify-center relative my-auto py-2">
+    <main class="w-full flex-1 flex items-center justify-center relative my-auto py-1 overflow-hidden">
 
         <!-- Background Casino Lobby Decorations -->
         <div class="absolute inset-0 pointer-events-none opacity-20 flex justify-between items-center px-4 overflow-hidden">
@@ -311,16 +329,16 @@
         </div>
 
         <!-- SUNWIN TÀI XỈU MAIN FRAME -->
-        <div class="sunwin-frame w-full max-w-3xl p-3 sm:p-5 mx-auto">
+        <div class="sunwin-frame w-full max-w-2xl lg:max-w-3xl p-2 sm:p-4 mx-auto scale-95 sm:scale-100">
 
             <!-- Logo Title Floating Top -->
-            <div class="absolute -top-7 left-1/2 -translate-x-1/2 flex flex-col items-center z-20 pointer-events-none">
+            <div class="absolute -top-6 left-1/2 -translate-x-1/2 flex flex-col items-center z-20 pointer-events-none">
                 <div class="relative flex items-center justify-center">
                     <!-- Red Dice Icon Decor -->
                     <div class="absolute -left-9 -top-1 w-8 h-8 bg-red-600 rounded-lg border border-yellow-300 rotate-12 flex items-center justify-center shadow-lg">
                         <div class="w-2 h-2 bg-white rounded-full"></div>
                     </div>
-                    <h1 class="text-2xl sm:text-3xl font-black italic gold-text-gradient tracking-wider uppercase px-4 py-0.5 bg-black/80 rounded-full border border-yellow-500/50 shadow-2xl">
+                    <h1 class="text-xl sm:text-2xl font-black italic gold-text-gradient tracking-wider uppercase px-4 py-0.5 bg-black/80 rounded-full border border-yellow-500/50 shadow-2xl">
                         TÀI XỈU
                     </h1>
                     <!-- Gold Stack Decor -->
@@ -328,7 +346,7 @@
                         <i class="fa-solid fa-coins"></i>
                     </div>
                 </div>
-                <div class="text-[11px] text-yellow-200/80 bg-black/90 px-3 py-0.5 rounded-b-md font-mono border-x border-b border-yellow-600/40">
+                <div class="text-[10px] text-yellow-200/80 bg-black/90 px-3 py-0.5 rounded-b-md font-mono border-x border-b border-yellow-600/40">
                     Mã phiên: <span id="sessionCode" class="text-yellow-400 font-bold">#68270</span>
                 </div>
             </div>
@@ -847,6 +865,12 @@
             const bowl = document.getElementById('bowl');
             let isDragging = false;
             let startX, startY;
+
+            // Prevent touch scrolling on double tap or gestures
+            document.addEventListener('gesturestart', (e) => e.preventDefault());
+            document.addEventListener('touchmove', (e) => {
+                if (e.scale !== 1) e.preventDefault();
+            }, { passive: false });
 
             function startDrag(e) {
                 if (gameState !== 'NANNING') return;
