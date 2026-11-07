@@ -62,17 +62,28 @@
         .bet-stat { font-size: 14px; color: #aaa; margin-top: 5px; }
 
         .center-plate {
-            width: 220px; height: 220px; background: radial-gradient(circle, #664411 0%, #1a1000 100%);
+            width: 230px; height: 230px; background: radial-gradient(circle, #664411 0%, #1a1000 100%);
             border: 6px solid #d4af37; border-radius: 50%; position: relative;
             display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 20px #000;
         }
-        .dices { display: flex; gap: 8px; }
+        .dices { display: flex; gap: 8px; justify-content: center; align-items: center; }
+        
+        /* Đồ họa hột Xí ngầu chấm tròn thực tế */
         .dice {
-            width: 45px; height: 45px; background: #e63946; color: #fff;
-            font-size: 26px; font-weight: bold; border-radius: 8px;
-            display: flex; justify-content: center; align-items: center;
-            border: 2px solid #ff758c; box-shadow: 2px 2px 6px #000;
+            width: 46px; height: 46px; background: #d90429;
+            border-radius: 8px; border: 2px solid #ff758c; box-shadow: 2px 2px 6px #000;
+            display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+            padding: 4px; gap: 2px;
         }
+        .pip { background-color: #ffffff; border-radius: 50%; visibility: hidden; }
+        
+        /* Vị trí chấm xí ngầu */
+        .dice[data-val="1"] .pip:nth-child(5) { visibility: visible; }
+        .dice[data-val="2"] .pip:nth-child(1), .dice[data-val="2"] .pip:nth-child(9) { visibility: visible; }
+        .dice[data-val="3"] .pip:nth-child(1), .dice[data-val="3"] .pip:nth-child(5), .dice[data-val="3"] .pip:nth-child(9) { visibility: visible; }
+        .dice[data-val="4"] .pip:nth-child(1), .dice[data-val="4"] .pip:nth-child(3), .dice[data-val="4"] .pip:nth-child(7), .dice[data-val="4"] .pip:nth-child(9) { visibility: visible; }
+        .dice[data-val="5"] .pip:nth-child(1), .dice[data-val="5"] .pip:nth-child(3), .dice[data-val="5"] .pip:nth-child(5), .dice[data-val="5"] .pip:nth-child(7), .dice[data-val="5"] .pip:nth-child(9) { visibility: visible; }
+        .dice[data-val="6"] .pip:nth-child(1), .dice[data-val="6"] .pip:nth-child(3), .dice[data-val="6"] .pip:nth-child(4), .dice[data-val="6"] .pip:nth-child(6), .dice[data-val="6"] .pip:nth-child(7), .dice[data-val="6"] .pip:nth-child(9) { visibility: visible; }
 
         .bowl {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -80,6 +91,7 @@
             border: 4px solid #fff; border-radius: 50%; box-shadow: 0 10px 20px #000;
             display: flex; justify-content: center; align-items: center;
             font-weight: bold; color: #fff; font-size: 16px; cursor: grab; z-index: 10;
+            transition: transform 0.1s ease-out;
         }
 
         .timer-badge {
@@ -142,11 +154,11 @@
 
             <div class="center-plate">
                 <div class="dices">
-                    <div class="dice" id="d1">?</div>
-                    <div class="dice" id="d2">?</div>
-                    <div class="dice" id="d3">?</div>
+                    <div class="dice" id="d1" data-val="1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+                    <div class="dice" id="d2" data-val="1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
+                    <div class="dice" id="d3" data-val="1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
                 </div>
-                <div class="bowl" id="bowl" style="display: none;">NẶN BÁT</div>
+                <div class="bowl" id="bowl" style="display: none;">KÉO NẶN BÁT</div>
             </div>
 
             <div class="side-btn" id="sideXiu" onclick="selectSide('XIU')">
@@ -170,7 +182,6 @@
 </div>
 
 <script>
-    // Tự động căn chỉnh Scale 100% không bị che màn hình
     function resizeGame() {
         const scaler = document.getElementById('game-scaler');
         const warning = document.getElementById('portrait-warning');
@@ -191,11 +202,9 @@
     window.addEventListener('resize', resizeGame);
     window.addEventListener('load', resizeGame);
 
-    // Chống thu phóng thủ công
     document.addEventListener('gesturestart', e => e.preventDefault());
     document.addEventListener('dblclick', e => e.preventDefault());
 
-    // Âm thanh Web Audio API
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSound(type) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -217,7 +226,6 @@
         }
     }
 
-    // Logic Game
     let balance = 200000;
     let selectedSide = null;
     let betAmount = 0;
@@ -261,8 +269,9 @@
     function startNan() {
         gameState = 'NAN';
         document.getElementById('timer').innerText = 'NẶN!';
-        document.getElementById('bowl').style.display = 'flex';
-        document.getElementById('bowl').style.transform = 'translate(0,0)';
+        let bowl = document.getElementById('bowl');
+        bowl.style.display = 'flex';
+        bowl.style.transform = 'translate(0px, 0px)';
         
         let d1 = Math.floor(Math.random()*6)+1;
         let d2 = Math.floor(Math.random()*6)+1;
@@ -270,30 +279,51 @@
         currentTotal = d1 + d2 + d3;
         currentOutcome = currentTotal >= 11 ? 'TAI' : 'XIU';
 
-        document.getElementById('d1').innerText = d1;
-        document.getElementById('d2').innerText = d2;
-        document.getElementById('d3').innerText = d3;
+        // Gán giá trị chấm tròn cho xí ngầu
+        document.getElementById('d1').setAttribute('data-val', d1);
+        document.getElementById('d2').setAttribute('data-val', d2);
+        document.getElementById('d3').setAttribute('data-val', d3);
 
         initBowlDrag();
     }
 
+    // Cơ chế kéo nặn bát phải kéo xa hẳn (> 110px) mới tính mở
     function initBowlDrag() {
         let bowl = document.getElementById('bowl');
-        let dragging = false, startX, startY;
+        let dragging = false, startX, startY, lastDX = 0, lastDY = 0;
 
         const onStart = e => {
+            if (gameState !== 'NAN') return;
             dragging = true;
             let c = e.touches ? e.touches[0] : e;
             startX = c.clientX; startY = c.clientY;
+            bowl.style.transition = 'none';
         };
+
         const onMove = e => {
-            if (!dragging) return;
+            if (!dragging || gameState !== 'NAN') return;
             let c = e.touches ? e.touches[0] : e;
-            let dx = c.clientX - startX, dy = c.clientY - startY;
-            bowl.style.transform = `translate(${dx}px, ${dy}px)`;
-            if (Math.sqrt(dx*dx + dy*dy) > 70) { dragging = false; reveal(); }
+            lastDX = c.clientX - startX; 
+            lastDY = c.clientY - startY;
+            
+            bowl.style.transform = `translate(${lastDX}px, ${lastDY}px)`;
+
+            let distance = Math.sqrt(lastDX * lastDX + lastDY * lastDY);
+            // Yêu cầu kéo bát ra xa hơn 110px mới chính thức mở
+            if (distance > 110) { 
+                dragging = false; 
+                reveal(); 
+            }
         };
-        const onEnd = () => dragging = false;
+
+        const onEnd = () => {
+            if (dragging && gameState === 'NAN') {
+                dragging = false;
+                // Nếu chưa kéo đủ xa mà buông tay out ra -> Bát trượt về vị trí cũ
+                bowl.style.transition = 'transform 0.2s ease-out';
+                bowl.style.transform = 'translate(0px, 0px)';
+            }
+        };
 
         bowl.onmousedown = onStart; window.onmousemove = onMove; window.onmouseup = onEnd;
         bowl.ontouchstart = onStart; window.ontouchmove = onMove; window.ontouchend = onEnd;
@@ -308,10 +338,12 @@
         if (win && betAmount > 0) {
             balance += betAmount * 2;
             playSound('win');
-            document.getElementById('status-msg').innerText = `THẮNG +${(betAmount*2).toLocaleString()} VNĐ`;
+            document.getElementById('status-msg').innerText = `THẮNG +${(betAmount*2).toLocaleString()} VNĐ (${currentTotal} ĐIỂM)`;
         } else if (betAmount > 0) {
             playSound('lose');
-            document.getElementById('status-msg').innerText = `THUA -${betAmount.toLocaleString()} VNĐ`;
+            document.getElementById('status-msg').innerText = `THUA -${betAmount.toLocaleString()} VNĐ (${currentTotal} ĐIỂM)`;
+        } else {
+            document.getElementById('status-msg').innerText = `KẾT QUẢ: ${currentOutcome} (${currentTotal} ĐIỂM)`;
         }
 
         if (currentOutcome === 'TAI') document.getElementById('sideTai').classList.add('winner');
@@ -329,9 +361,12 @@
         document.getElementById('sideTai').className = 'side-btn';
         document.getElementById('sideXiu').className = 'side-btn';
         document.getElementById('status-msg').innerText = 'Chọn cửa và đặt cược...';
-        document.getElementById('d1').innerText = '?';
-        document.getElementById('d2').innerText = '?';
-        document.getElementById('d3').innerText = '?';
+        
+        // Reset về lại 1 chấm mặc định
+        document.getElementById('d1').setAttribute('data-val', 1);
+        document.getElementById('d2').setAttribute('data-val', 1);
+        document.getElementById('d3').setAttribute('data-val', 1);
+        
         updateUI();
     }
 
