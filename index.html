@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tài Xỉu - Nặn Bát Sòng Bạc</title>
+    <title>Tài Xỉu - Nặn Bát Có Âm Thanh</title>
     <style>
         * { box-sizing: border-box; user-select: none; }
         body {
@@ -60,7 +60,7 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .bet-side.selected { border-color: #ffd700; background: rgba(184, 134, 11, 0.3); }
+        .bet-side.selected { border-color: #ffd700; background: rgba(184, 134, 11, 0.4); transform: scale(1.05); }
         .bet-side.active-winner {
             animation: blink 0.6s infinite alternate;
             border-color: #00ffcc;
@@ -160,8 +160,9 @@
             cursor: pointer;
             font-size: 13px;
             font-weight: bold;
+            transition: 0.1s;
         }
-        .chip:hover { background: #5e2493; }
+        .chip:active { transform: scale(0.95); }
 
         /* Bảng lịch sử ma trận */
         .history-board {
@@ -196,7 +197,7 @@
 <body>
 
 <div class="container">
-    <h2>TÀI XỈU - NẶN BÁT THỜI GIAN 45S</h2>
+    <h2>TÀI XỈU - NẶN BÁT CÓ ÂM THANH</h2>
 
     <div class="top-info">
         <div>Số dư: <span id="balance" class="wallet">200,000</span> VNĐ</div>
@@ -250,11 +251,66 @@
 </div>
 
 <script>
+    // --- HỆ THỐNG ÂM THANH (WEB AUDIO API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Sound 1: Âm thanh đặt cược (Click / Đặt chip)
+    function playBetSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+    }
+
+    // Sound 2: Âm thanh THẮNG (Chuông may mắn ngân cao)
+    function playWinSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        let notes = [523.25, 659.25, 783.99, 1046.50]; // Đồ - Mi - Sol - Đố
+        notes.forEach((freq, idx) => {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            let startTime = audioCtx.currentTime + (idx * 0.1);
+            gain.gain.setValueAtTime(0.3, startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.4);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + 0.4);
+        });
+    }
+
+    // Sound 3: Âm thanh THUA (Âm trầm ngắn)
+    function playLoseSound() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    }
+
+    // --- BIẾN TOÀN CỤC & LOGIC GAME ---
     let balance = 200000;
     let selectedSide = null;
     let currentBetAmount = 0;
-    let gameState = 'BETTING'; // 'BETTING', 'NAN_BAT', 'RESULT'
-    let timeLeft = 45; // Đã chỉnh thời gian thành 45 giây
+    let gameState = 'BETTING';
+    let timeLeft = 45;
     let historyList = [];
     
     let currentOutcome = null;
@@ -266,10 +322,12 @@
     function addChip(amount) {
         let input = document.getElementById('betAmount');
         input.value = (parseInt(input.value) || 0) + amount;
+        playBetSound();
     }
 
     function setAllIn() {
         document.getElementById('betAmount').value = balance;
+        playBetSound();
     }
 
     function selectSide(side) {
@@ -277,9 +335,10 @@
         selectedSide = side;
         document.getElementById('sideTai').classList.toggle('selected', side === 'TAI');
         document.getElementById('sideXiu').classList.toggle('selected', side === 'XIU');
+        playBetSound();
     }
 
-    // Vòng lặp đếm ngược 45 giây
+    // Vòng lặp 45s
     setInterval(() => {
         if (gameState === 'BETTING') {
             timeLeft--;
@@ -290,12 +349,10 @@
         }
     }, 1000);
 
-    // Chuyển sang giai đoạn Đậy bát & Cho nặn
     function startNanBatPhase() {
         gameState = 'NAN_BAT';
         document.getElementById('timer').innerText = 'NẶN BÁT!';
 
-        // Trừ tiền cược nếu người chơi có chọn cửa
         let amount = parseInt(document.getElementById('betAmount').value) || 0;
         if (selectedSide && amount > 0 && amount <= balance) {
             currentBetAmount = amount;
@@ -305,7 +362,6 @@
             currentBetAmount = 0;
         }
 
-        // Tạo kết quả xí ngầu ngầm trước
         let d1 = Math.floor(Math.random() * 6) + 1;
         let d2 = Math.floor(Math.random() * 6) + 1;
         let d3 = Math.floor(Math.random() * 6) + 1;
@@ -316,7 +372,6 @@
         document.getElementById('d2').innerText = d2;
         document.getElementById('d3').innerText = d3;
 
-        // Hiện bát úp che xí ngầu lại
         let bowl = document.getElementById('bowl');
         bowl.style.display = 'flex';
         bowl.style.transform = 'translate(0px, 0px)';
@@ -325,7 +380,6 @@
         initBowlDrag();
     }
 
-    // Kéo mở bát (Tương tác nặn bát)
     function initBowlDrag() {
         let bowl = document.getElementById('bowl');
         let isDragging = false;
@@ -349,7 +403,6 @@
 
             bowl.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
 
-            // Nếu kéo bát đi xa hơn 60px -> Mở bát hoàn toàn
             let distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
             if (distance > 60) {
                 isDragging = false;
@@ -368,14 +421,13 @@
         window.ontouchend = onEnd;
     }
 
-    // Mở bát và tính kết quả thắng/thua
+    // Mở bát và phát âm thanh tương ứng Thắng / Thua
     function openBowlFully() {
         if (gameState !== 'NAN_BAT') return;
         gameState = 'RESULT';
         
         document.getElementById('bowl').style.display = 'none';
 
-        // Hiệu ứng nhấp nháy cửa thắng
         if (currentOutcome === 'TAI') {
             document.getElementById('sideTai').classList.add('active-winner');
         } else {
@@ -389,19 +441,19 @@
                 let winAmount = currentBetAmount * 2;
                 balance += winAmount;
                 ann += ` - <span style="color:#00ffcc">BẠN THẮNG +${winAmount.toLocaleString()} VNĐ</span>`;
+                playWinSound(); // Phát âm thanh ăn tiền
             } else {
                 ann += ` - <span style="color:#ff4d4d">BẠN THUA -${currentBetAmount.toLocaleString()} VNĐ</span>`;
+                playLoseSound(); // Phát âm thanh thua
             }
         }
 
         document.getElementById('announcement').innerHTML = ann;
         document.getElementById('balance').innerText = balance.toLocaleString();
 
-        // Cập nhật ma trận soi cầu
         historyList.push({ type: currentOutcome, score: currentTotal });
         renderMatrixGrid();
 
-        // 5 giây sau reset phiên mới 45 giây
         setTimeout(resetRound, 5000);
     }
 
@@ -422,7 +474,6 @@
         document.getElementById('d3').innerText = '?';
     }
 
-    // Vẽ ma trận lịch sử soi cầu
     function renderMatrixGrid() {
         let gridContainer = document.getElementById('historyGrid');
         gridContainer.innerHTML = '';
