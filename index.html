@@ -61,23 +61,30 @@
         .xiu-color { color: #3399ff; text-shadow: 0 0 10px #3399ff; }
         .bet-stat { font-size: 14px; color: #aaa; margin-top: 5px; }
 
+        /* Đĩa chứa 3 hột Xí Ngầu */
         .center-plate {
             width: 230px; height: 230px; background: radial-gradient(circle, #664411 0%, #1a1000 100%);
             border: 6px solid #d4af37; border-radius: 50%; position: relative;
             display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 20px #000;
         }
-        .dices { display: flex; gap: 8px; justify-content: center; align-items: center; }
         
-        /* Đồ họa hột Xí ngầu chấm tròn thực tế */
+        /* Đồ họa 3 hột Xí Ngầu xếp Hình Tam Giác */
+        .dice-triangle {
+            width: 110px; height: 100px; position: relative;
+            display: flex; justify-content: center;
+        }
         .dice {
-            width: 46px; height: 46px; background: #d90429;
+            width: 44px; height: 44px; background: #d90429;
             border-radius: 8px; border: 2px solid #ff758c; box-shadow: 2px 2px 6px #000;
             display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr);
-            padding: 4px; gap: 2px;
+            padding: 4px; gap: 2px; position: absolute;
         }
+        #d1 { top: 0; left: 33px; }
+        #d2 { bottom: 0; left: 6px; }
+        #d3 { bottom: 0; right: 6px; }
+
         .pip { background-color: #ffffff; border-radius: 50%; visibility: hidden; }
         
-        /* Vị trí chấm xí ngầu */
         .dice[data-val="1"] .pip:nth-child(5) { visibility: visible; }
         .dice[data-val="2"] .pip:nth-child(1), .dice[data-val="2"] .pip:nth-child(9) { visibility: visible; }
         .dice[data-val="3"] .pip:nth-child(1), .dice[data-val="3"] .pip:nth-child(5), .dice[data-val="3"] .pip:nth-child(9) { visibility: visible; }
@@ -91,7 +98,6 @@
             border: 4px solid #fff; border-radius: 50%; box-shadow: 0 10px 20px #000;
             display: flex; justify-content: center; align-items: center;
             font-weight: bold; color: #fff; font-size: 16px; cursor: grab; z-index: 10;
-            transition: transform 0.1s ease-out;
         }
 
         .timer-badge {
@@ -112,14 +118,12 @@
         }
         .chip-btn:active { transform: scale(0.95); }
 
-        .history-grid {
-            display: grid; grid-template-rows: repeat(6, 18px); grid-auto-flow: column;
-            gap: 3px; background: #000; padding: 6px; border-radius: 8px; border: 1px solid #444;
+        /* Biểu đồ Soi Cầu Đường Gấp Khúc */
+        .chart-container {
+            width: 320px; height: 75px; background: #0a0312; border: 1px solid #444;
+            border-radius: 6px; position: relative; overflow: hidden;
         }
-        .dot { width: 18px; height: 18px; border-radius: 50%; font-size: 9px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
-        .dot-tai { background: #ff3333; color: #fff; }
-        .dot-xiu { background: #3399ff; color: #fff; }
-        .dot-empty { background: rgba(255,255,255,0.05); }
+        canvas { width: 100%; height: 100%; display: block; }
 
         #portrait-warning {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -153,7 +157,7 @@
             </div>
 
             <div class="center-plate">
-                <div class="dices">
+                <div class="dice-triangle">
                     <div class="dice" id="d1" data-val="1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
                     <div class="dice" id="d2" data-val="1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
                     <div class="dice" id="d3" data-val="1"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></div>
@@ -177,7 +181,11 @@
             <button class="chip-btn" onclick="setAllIn()">Tất tay</button>
         </div>
         <div id="status-msg" style="color: #ffd700; font-weight: bold;">Chọn cửa và đặt cược...</div>
-        <div class="history-grid" id="historyGrid"></div>
+        
+        <!-- Biểu đồ đường gấp khúc -->
+        <div class="chart-container">
+            <canvas id="lineChart" width="320" height="75"></canvas>
+        </div>
     </div>
 </div>
 
@@ -205,22 +213,36 @@
     document.addEventListener('gesturestart', e => e.preventDefault());
     document.addEventListener('dblclick', e => e.preventDefault());
 
+    // Âm thanh Web Audio API với tiếng Ting Tiền
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSound(type) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        let osc = audioCtx.createOscillator();
-        let gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
         if (type === 'chip') {
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
             osc.frequency.setValueAtTime(600, audioCtx.currentTime);
             gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
             osc.start(); osc.stop(audioCtx.currentTime + 0.05);
         } else if (type === 'win') {
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            // Tiếng "Ting Ting" ăn tiền vui tai
+            let notes = [987.77, 1318.51, 1567.98]; // B5 - E6 - G6
+            notes.forEach((freq, i) => {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.08);
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime + i * 0.08);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i * 0.08 + 0.35);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(audioCtx.currentTime + i * 0.08);
+                osc.stop(audioCtx.currentTime + i * 0.08 + 0.35);
+            });
         } else if (type === 'lose') {
-            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            let osc = audioCtx.createOscillator();
+            let gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.frequency.setValueAtTime(160, audioCtx.currentTime);
             gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
             osc.start(); osc.stop(audioCtx.currentTime + 0.3);
         }
@@ -271,6 +293,7 @@
         document.getElementById('timer').innerText = 'NẶN!';
         let bowl = document.getElementById('bowl');
         bowl.style.display = 'flex';
+        bowl.style.transition = 'none';
         bowl.style.transform = 'translate(0px, 0px)';
         
         let d1 = Math.floor(Math.random()*6)+1;
@@ -279,7 +302,6 @@
         currentTotal = d1 + d2 + d3;
         currentOutcome = currentTotal >= 11 ? 'TAI' : 'XIU';
 
-        // Gán giá trị chấm tròn cho xí ngầu
         document.getElementById('d1').setAttribute('data-val', d1);
         document.getElementById('d2').setAttribute('data-val', d2);
         document.getElementById('d3').setAttribute('data-val', d3);
@@ -287,7 +309,7 @@
         initBowlDrag();
     }
 
-    // Cơ chế kéo nặn bát phải kéo xa hẳn (> 110px) mới tính mở
+    // Cơ chế Kéo nặn và THẢ TAY mới tính vứt bát
     function initBowlDrag() {
         let bowl = document.getElementById('bowl');
         let dragging = false, startX, startY, lastDX = 0, lastDY = 0;
@@ -305,21 +327,19 @@
             let c = e.touches ? e.touches[0] : e;
             lastDX = c.clientX - startX; 
             lastDY = c.clientY - startY;
-            
             bowl.style.transform = `translate(${lastDX}px, ${lastDY}px)`;
-
-            let distance = Math.sqrt(lastDX * lastDX + lastDY * lastDY);
-            // Yêu cầu kéo bát ra xa hơn 110px mới chính thức mở
-            if (distance > 110) { 
-                dragging = false; 
-                reveal(); 
-            }
         };
 
         const onEnd = () => {
-            if (dragging && gameState === 'NAN') {
-                dragging = false;
-                // Nếu chưa kéo đủ xa mà buông tay out ra -> Bát trượt về vị trí cũ
+            if (!dragging || gameState !== 'NAN') return;
+            dragging = false;
+
+            let distance = Math.sqrt(lastDX * lastDX + lastDY * lastDY);
+            // BẮT BUỘC THẢ TAY KHI ĐÃ KÉO CÁCH XA > 100px MỚI TÍNH MỞ
+            if (distance > 100) {
+                reveal();
+            } else {
+                // Nếu thả tay khi chưa kéo đủ xa -> Bát trượt về đậy đĩa lại
                 bowl.style.transition = 'transform 0.2s ease-out';
                 bowl.style.transform = 'translate(0px, 0px)';
             }
@@ -337,7 +357,7 @@
         let win = selectedSide === currentOutcome;
         if (win && betAmount > 0) {
             balance += betAmount * 2;
-            playSound('win');
+            playSound('win'); // Tiếng Ting Ting ăn tiền
             document.getElementById('status-msg').innerText = `THẮNG +${(betAmount*2).toLocaleString()} VNĐ (${currentTotal} ĐIỂM)`;
         } else if (betAmount > 0) {
             playSound('lose');
@@ -350,7 +370,9 @@
         else document.getElementById('sideXiu').classList.add('winner');
 
         history.push({ type: currentOutcome, score: currentTotal });
-        renderHistory();
+        if (history.length > 15) history.shift();
+        
+        drawChart();
         updateUI();
 
         setTimeout(reset, 4000);
@@ -362,7 +384,6 @@
         document.getElementById('sideXiu').className = 'side-btn';
         document.getElementById('status-msg').innerText = 'Chọn cửa và đặt cược...';
         
-        // Reset về lại 1 chấm mặc định
         document.getElementById('d1').setAttribute('data-val', 1);
         document.getElementById('d2').setAttribute('data-val', 1);
         document.getElementById('d3').setAttribute('data-val', 1);
@@ -376,28 +397,62 @@
         document.getElementById('myBetXiu').innerText = `Cược: ${selectedSide==='XIU'?betAmount.toLocaleString():0}`;
     }
 
-    function renderHistory() {
-        let grid = document.getElementById('historyGrid');
-        grid.innerHTML = '';
-        let mat = Array(6).fill(null).map(()=>Array(25).fill(null));
-        let r = 0, c = 0;
-        for (let i = 0; i < history.length; i++) {
-            if (i > 0 && history[i].type !== history[i-1].type) { c++; r = 0; }
-            else if (r >= 6) { c++; r = 0; }
-            if (c >= 25) { history.shift(); i--; continue; }
-            mat[r][c] = history[i]; r++;
+    // Vẽ Biểu Đồ Đường Gấp Khúc Nối Điểm Số (Ảnh 7)
+    function drawChart() {
+        const canvas = document.getElementById('lineChart');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Vẽ đường lưới background
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 4; i++) {
+            ctx.beginPath();
+            ctx.moveTo(0, i * 18);
+            ctx.lineTo(canvas.width, i * 18);
+            ctx.stroke();
         }
-        for (let row = 0; row < 6; row++) {
-            for (let col = 0; col < 25; col++) {
-                let cell = mat[row][col];
-                let div = document.createElement('div');
-                div.className = cell ? `dot ${cell.type==='TAI'?'dot-tai':'dot-xiu'}` : 'dot dot-empty';
-                if (cell) div.innerText = cell.score;
-                grid.appendChild(div);
-            }
-        }
+
+        if (history.length < 2) return;
+
+        const stepX = canvas.width / 14;
+        const points = history.map((h, idx) => {
+            let x = idx * stepX + 10;
+            // Map điểm số (3 -> 18) vào chiều cao canvas (75 -> 5)
+            let y = canvas.height - ((h.score - 3) / 15) * (canvas.height - 20) - 10;
+            return { x, y, score: h.score, type: h.type };
+        });
+
+        // Vẽ dây nối zíc-zắc
+        ctx.beginPath();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        points.forEach((p, idx) => {
+            if (idx === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
+
+        // Vẽ các điểm nút tròn chứa điểm số
+        points.forEach(p => {
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = p.type === 'TAI' ? '#000000' : '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Chữ số điểm
+            ctx.fillStyle = p.type === 'TAI' ? '#ffffff' : '#000000';
+            ctx.font = 'bold 9px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(p.score, p.x, p.y);
+        });
     }
-    renderHistory();
+
+    drawChart();
 </script>
 </body>
 </html>
